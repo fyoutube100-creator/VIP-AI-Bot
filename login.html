@@ -17,25 +17,28 @@
 
     <div class="w-full max-w-sm glass-panel rounded-2xl p-8 z-10 relative">
         <div class="text-center mb-8">
-            <!-- গোল্ডেন 'B' আইকন -->
             <div class="w-16 h-16 mx-auto bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-2xl flex justify-center items-center font-extrabold text-3xl text-black shadow-[0_0_15px_rgba(234,179,8,0.4)] mb-4 border border-yellow-300">B</div>
-            
             <h1 class="text-2xl font-bold text-white mb-1 tracking-wide">Black Shoter Premium</h1>
             <p class="text-sm text-yellow-500 font-semibold">VIP Member Login</p>
         </div>
 
-        <form>
+        <form id="loginForm">
             <div class="mb-5">
                 <label class="block text-xs text-gray-400 uppercase tracking-wider mb-2 font-semibold">VIP ID / Username</label>
-                <input type="text" class="w-full bg-[#0d1117] border border-gray-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 transition" placeholder="Enter your ID">
+                <!-- আইডির ইনপুট -->
+                <input type="text" id="username" class="w-full bg-[#0d1117] border border-gray-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 transition" placeholder="Enter your ID">
             </div>
             
             <div class="mb-6">
                 <label class="block text-xs text-gray-400 uppercase tracking-wider mb-2 font-semibold">Password</label>
-                <input type="password" class="w-full bg-[#0d1117] border border-gray-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 transition" placeholder="••••••••">
+                <!-- পাসওয়ার্ডের ইনপুট -->
+                <input type="password" id="password" class="w-full bg-[#0d1117] border border-gray-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 transition" placeholder="••••••••">
             </div>
 
-            <button type="button" onclick="window.location.href='bot.html'" class="w-full bg-gradient-to-r from-yellow-600 to-yellow-500 hover:from-yellow-500 hover:to-yellow-400 text-black font-bold py-3 px-4 rounded-lg transition shadow-lg shadow-yellow-600/30 tracking-wider">
+            <!-- ভুল পাসওয়ার্ড দিলে এই লাল মেসেজটি দেখাবে -->
+            <p id="error-msg" class="text-red-500 text-sm text-center mb-4 hidden font-bold"></p>
+
+            <button type="button" onclick="checkLogin()" class="w-full bg-gradient-to-r from-yellow-600 to-yellow-500 hover:from-yellow-500 hover:to-yellow-400 text-black font-bold py-3 px-4 rounded-lg transition shadow-lg shadow-yellow-600/30 tracking-wider">
                 LOGIN TO DASHBOARD
             </button>
         </form>
@@ -46,5 +49,44 @@
         </p>
     </div>
 
+    <!-- সিকিউরিটি জাভাস্ক্রিপ্ট -->
+    <script>
+        function checkLogin() {
+            const user = document.getElementById('username').value;
+            const pass = document.getElementById('password').value;
+            const errorMsg = document.getElementById('error-msg');
+
+            // ফাঁকা রাখলে ওয়ার্নিং দিবে
+            if(user === "" || pass === "") {
+                errorMsg.innerText = "আইডি এবং পাসওয়ার্ড দিতে হবে!";
+                errorMsg.classList.remove('hidden');
+                return;
+            }
+
+            errorMsg.classList.add('hidden');
+            
+            // ব্যাকএন্ডে (পাইথন) পাসওয়ার্ড চেক করতে পাঠাচ্ছে
+            fetch('/api/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: user, password: pass })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if(data.status === "success") {
+                    // পাসওয়ার্ড সঠিক হলে ড্যাশবোর্ডে যাবে
+                    window.location.href = "/bot.html";
+                } else {
+                    // ভুল হলে লাল এরর দেখাবে
+                    errorMsg.innerText = data.message;
+                    errorMsg.classList.remove('hidden');
+                }
+            })
+            .catch(err => {
+                errorMsg.innerText = "Network Error!";
+                errorMsg.classList.remove('hidden');
+            });
+        }
+    </script>
 </body>
 </html>
