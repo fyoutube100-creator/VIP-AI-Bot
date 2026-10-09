@@ -10,7 +10,8 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 VIP_USERS = {
     "admin": "12345",
     "vip1": "blackshoter",
-    "boss": "gold99"
+    "boss": "gold99",
+    "FARHAD":"Fm889896@"
 }
 
 @app.route('/')
