@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VIP Login - Black Shoter Premium</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background-color: #0d1117; color: white; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .glass-panel { background: #161b22; border: 1px solid #30363d; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5); }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
+    
+    <div class="absolute top-1/4 left-1/4 w-64 h-64 bg-yellow-600 rounded-full mix-blend-multiply filter blur-[100px] opacity-20"></div>
+    <div class="absolute bottom-1/4 right-1/4 w-64 h-64 bg-yellow-600 rounded-full mix-blend-multiply filter blur-[100px] opacity-10"></div>
+
+    <div class="w-full max-w-sm glass-panel rounded-2xl p-8 z-10 relative">
+        <div class="text-center mb-8">
+            <!-- গোল্ডেন 'B' আইকন -->
+            <div class="w-16 h-16 mx-auto bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-2xl flex justify-center items-center font-extrabold text-3xl text-black shadow-[0_0_15px_rgba(234,179,8,0.4)] mb-4 border border-yellow-300">B</div>
+            
+            <h1 class="text-2xl font-bold text-white mb-1 tracking-wide">Black Shoter Premium</h1>
+            <p class="text-sm text-yellow-500 font-semibold">VIP Member Login</p>
+        </div>
+
+        <form>
+            <div class="mb-5">
+                <label class="block text-xs text-gray-400 uppercase tracking-wider mb-2 font-semibold">VIP ID / Username</label>
+                <input type="text" class="w-full bg-[#0d1117] border border-gray-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 transition" placeholder="Enter your ID">
+            </div>
+            
+            <div class="mb-6">
+                <label class="block text-xs text-gray-400 uppercase tracking-wider mb-2 font-semibold">Password</label>
+                <input type="password" class="w-full bg-[#0d1117] border border-gray-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 transition" placeholder="••••••••">
+            </div>
+
+            <button type="button" onclick="window.location.href='bot.html'" class="w-full bg-gradient-to-r from-yellow-600 to-yellow-500 hover:from-yellow-500 hover:to-yellow-400 text-black font-bold py-3 px-4 rounded-lg transition shadow-lg shadow-yellow-600/30 tracking-wider">
+                LOGIN TO DASHBOARD
+            </button>
+        </form>
+
+        <p class="text-center text-xs text-gray-500 mt-6 flex items-center justify-center gap-1">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+            End-to-End Encrypted
+        </p>
+    </div>
+
+</body>
+</html>
