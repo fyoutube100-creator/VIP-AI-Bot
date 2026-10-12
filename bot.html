@@ -82,7 +82,6 @@
         }
         setInterval(updateTime, 1000);
 
-        // মোবাইলে নোটিফিকেশন পারমিশন চাওয়া
         document.addEventListener('DOMContentLoaded', () => {
             if (Notification.permission !== "denied" && Notification.permission !== "granted") {
                 Notification.requestPermission();
@@ -93,7 +92,6 @@
             fetch('/api/get_signal')
                 .then(res => res.json())
                 .then(data => {
-                    // Update AI Message & Headers
                     document.getElementById('ai-message').innerText = data.message;
                     document.getElementById('asset-name').innerText = data.asset;
                     document.getElementById('signal-type').innerText = data.type ? (data.type + " SIGNAL") : "WAITING SIGNAL";
@@ -109,16 +107,19 @@
                         badge.className = "px-3 py-1.5 bg-gray-800 text-gray-300 rounded font-bold text-sm border border-gray-700";
                     }
 
-                    // 🔊 সাউন্ড এবং পুশ নোটিফিকেশন লজিক
+                    // 🔊 সাউন্ড এবং পুশ নোটিফিকেশন (Safety Block Added)
                     if (data.action !== "WAIT ⏳" && lastAction === "WAIT ⏳") {
                         document.getElementById('alertSound').play().catch(e => console.log("Audio play blocked by browser"));
                         
-                        // মোবাইলে ব্যাকগ্রাউন্ড নোটিফিকেশন
-                        if (Notification.permission === "granted") {
-                            new Notification("🔥 VIP Signal Alert!", { 
-                                body: `${data.asset} - ${data.action} Signal is Live!\nEntry: ${data.entry || "--"}`,
-                                icon: "https://cdn-icons-png.flaticon.com/512/2950/2950150.png"
-                            });
+                        try {
+                            if (Notification.permission === "granted") {
+                                new Notification("🔥 VIP Signal Alert!", { 
+                                    body: `${data.asset} - ${data.action} Signal is Live!\nEntry: ${data.entry || "--"}`,
+                                    icon: "https://cdn-icons-png.flaticon.com/512/2950/2950150.png"
+                                });
+                            }
+                        } catch (error) {
+                            console.log("Mobile browser does not support desktop notifications, skipping...");
                         }
                     }
                     lastAction = data.action;
@@ -183,7 +184,6 @@
                 .catch(err => console.log(err));
         }
 
-        // অটো রিফ্রেশ (প্রতি ৩০ সেকেন্ড পর পর)
         fetchSignal();
         setInterval(fetchSignal, 30000);
     </script>
