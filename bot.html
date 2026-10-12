@@ -3,146 +3,188 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Black Shoter Premium AI Bot</title>
+    <title>Black Shoter AI - VIP Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        body { background-color: #0d1117; color: white; font-family: 'Segoe UI', sans-serif; }
-        .glass-panel { background: #161b22; border: 1px solid #30363d; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
-        @keyframes pulse-dot {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.4; transform: scale(0.8); }
-        }
-        .ai-dot { animation: pulse-dot 1.5s infinite; }
-    </style>
 </head>
-<body class="min-h-screen flex flex-col items-center p-4">
+<body class="bg-[#0d1117] text-white font-sans min-h-screen p-4">
+    
+    <!-- 🔊 প্রিমিয়াম অ্যালার্ট সাউন্ড -->
+    <audio id="alertSound" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" preload="auto"></audio>
 
-    <!-- হেডার -->
-    <header class="w-full max-w-md flex items-center justify-between py-4 border-b border-gray-800 mb-6">
-        <div class="flex items-center space-x-3">
-            <div class="w-8 h-8 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-md flex justify-center items-center font-bold text-black lg shadow-yellow-500/30">B</div>
-            <div>
-                <h1 class="font-bold text-lg leading-tight text-white">Black Shoter AI</h1>
-                <p class="text-xs text-yellow-500 font-semibold">VIP Dashboard</p>
-            </div>
-        </div>
-        <button onclick="window.location.href='/login.html'" class="text-red-400 hover:text-red-300 text-sm font-semibold">Logout</button>
-    </header>
-
-    <!-- এআই স্ট্যাটাস -->
-    <div class="w-full max-w-md glass-panel rounded-xl p-4 mb-6">
-        <div class="text-xs text-blue-400 font-bold mb-1 tracking-wider uppercase">AI System Active</div>
-        <div class="flex items-center space-x-2">
-            <div class="w-3 h-3 bg-green-500 rounded-full ai-dot"></div>
-            <h2 class="text-lg font-bold">Auto Analysis is Running</h2>
-        </div>
-        <p id="ai-message" class="text-sm text-gray-400 mt-1">AI is scanning the market...</p>
-    </div>
-
-    <!-- সিগন্যাল কার্ড -->
-    <div class="w-full max-w-md">
-        <div class="flex justify-between items-center mb-3">
-            <h3 class="font-bold text-gray-300">Live Signal</h3>
-            <span id="current-time" class="text-xs bg-gray-800 px-2 py-1 rounded text-gray-400">Loading Time...</span>
-        </div>
-
-        <div class="glass-panel rounded-xl p-5 relative overflow-hidden border-t-2 border-t-yellow-500">
-            <!-- সিগন্যালের নাম ও অ্যাকশন -->
-            <div class="flex justify-between items-start mb-4">
+    <div class="max-w-md mx-auto">
+        <!-- Header -->
+        <div class="flex justify-between items-center border-b border-gray-800 pb-4 mb-4">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-yellow-500 rounded-lg flex items-center justify-center font-bold text-black text-xl">B</div>
                 <div>
-                    <h2 id="signal-asset" class="text-2xl font-extrabold tracking-wider text-white">SCANNING...</h2>
-                    <p id="signal-type" class="text-xs text-yellow-500 font-bold mt-1">Please Wait</p>
+                    <h1 class="font-bold text-lg leading-tight">Black Shoter AI</h1>
+                    <p class="text-xs text-yellow-500">VIP Dashboard</p>
                 </div>
-                <div id="signal-action" class="bg-gray-800 text-gray-400 px-4 py-1.5 rounded-lg font-bold text-lg border border-gray-700">
-                    --
+            </div>
+            <a href="/" class="text-red-400 text-sm font-semibold hover:text-red-300">Logout</a>
+        </div>
+
+        <!-- AI Status -->
+        <div class="bg-[#161b22] border border-gray-800 rounded-xl p-4 mb-6">
+            <p class="text-xs text-blue-400 font-bold mb-1">AI SYSTEM ACTIVE</p>
+            <div class="flex items-center gap-2 mb-2">
+                <div class="w-2.5 h-2.5 bg-green-500 rounded-full animate-pulse"></div>
+                <h2 class="font-bold text-lg">Auto Analysis is Running</h2>
+            </div>
+            <p id="ai-message" class="text-sm text-gray-400">মার্কেট স্ক্যান করা হচ্ছে...</p>
+        </div>
+
+        <!-- Signal Card -->
+        <div class="flex justify-between items-center mb-2">
+            <h3 class="font-bold">Live Signal</h3>
+            <span class="text-xs bg-gray-800 px-2 py-1 rounded text-gray-400" id="currentTime">--:--:--</span>
+        </div>
+
+        <div class="bg-[#161b22] border border-yellow-600/30 rounded-xl p-5 shadow-[0_0_15px_rgba(234,179,8,0.1)] relative overflow-hidden mb-6">
+            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-yellow-600 to-yellow-400"></div>
+
+            <div class="flex justify-between items-start mb-6">
+                <div>
+                    <h2 id="asset-name" class="text-2xl font-extrabold uppercase tracking-wider mb-1">SCANNING...</h2>
+                    <p id="signal-type" class="text-xs text-yellow-500 font-bold">WAITING SIGNAL</p>
+                </div>
+                <div id="action-badge" class="px-3 py-1.5 bg-gray-800 text-gray-300 rounded font-bold text-sm border border-gray-700 transition-all duration-300">
+                    WAIT ⏳
                 </div>
             </div>
 
-            <!-- সিগন্যালের বিস্তারিত (TP/SL) -->
-            <div id="signal-details" class="space-y-3 bg-[#0d1117] rounded-lg p-4 border border-gray-800">
-                <p class="text-center text-sm text-gray-500">Waiting for AI confirmation...</p>
+            <div class="space-y-4 border border-gray-800 rounded-lg p-4 bg-[#0d1117] mb-6" id="signal-details">
+                <!-- Data will show here -->
             </div>
-            
-            <div class="mt-4 text-center">
-                <button onclick="fetchSignal()" class="w-full bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white font-bold py-2 rounded-lg transition text-sm shadow-lg shadow-blue-500/20">
-                    Refresh Signal
-                </button>
+
+            <button onclick="fetchSignal()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-lg transition shadow-lg shadow-blue-900/20 tracking-wide">
+                Refresh Signal
+            </button>
+        </div>
+
+        <!-- History Section -->
+        <div class="flex justify-between items-center mb-2">
+            <h3 class="font-bold">Today's Trade History</h3>
+        </div>
+        <div class="bg-[#161b22] border border-gray-800 rounded-xl p-4 mb-8">
+            <div id="history-list" class="space-y-3">
+                <p class="text-sm text-gray-500 text-center py-2">No history yet.</p>
             </div>
         </div>
     </div>
 
-    <!-- এই জাভাস্ক্রিপ্টটি আপনার পাইথন ব্যাকএন্ড থেকে ডেটা নিয়ে আসবে -->
+    <!-- AI Logic Script -->
     <script>
-        // লাইভ ঘড়ি
+        let lastAction = "WAIT ⏳";
+
         function updateTime() {
-            const now = new Date();
-            document.getElementById('current-time').innerText = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'});
+            document.getElementById('currentTime').innerText = new Date().toLocaleTimeString();
         }
         setInterval(updateTime, 1000);
-        updateTime();
 
-        // পাইথন থেকে সিগন্যাল আনার ফাংশন
+        // মোবাইলে নোটিফিকেশন পারমিশন চাওয়া
+        document.addEventListener('DOMContentLoaded', () => {
+            if (Notification.permission !== "denied" && Notification.permission !== "granted") {
+                Notification.requestPermission();
+            }
+        });
+
         function fetchSignal() {
             fetch('/api/get_signal')
-                .then(response => response.json())
+                .then(res => res.json())
                 .then(data => {
-                    document.getElementById('signal-asset').innerText = data.asset;
-                    document.getElementById('signal-type').innerText = data.type + " SIGNAL";
-                    document.getElementById('signal-action').innerText = data.action;
+                    // Update AI Message & Headers
+                    document.getElementById('ai-message').innerText = data.message;
+                    document.getElementById('asset-name').innerText = data.asset;
+                    document.getElementById('signal-type').innerText = data.type ? (data.type + " SIGNAL") : "WAITING SIGNAL";
                     
-                    // BUY/SELL অনুযায়ী রঙ পরিবর্তন
+                    const badge = document.getElementById('action-badge');
+                    badge.innerText = data.action;
+                    
                     if(data.action.includes("BUY") || data.action.includes("UP")) {
-                        document.getElementById('signal-action').className = "bg-green-500/20 text-green-400 px-4 py-1.5 rounded-lg font-bold text-lg border border-green-500/30";
+                        badge.className = "px-3 py-1.5 bg-green-900/80 text-green-400 rounded font-bold text-sm border border-green-500 animate-pulse";
+                    } else if(data.action.includes("SELL") || data.action.includes("DOWN")) {
+                        badge.className = "px-3 py-1.5 bg-red-900/80 text-red-400 rounded font-bold text-sm border border-red-500 animate-pulse";
                     } else {
-                        document.getElementById('signal-action').className = "bg-red-500/20 text-red-400 px-4 py-1.5 rounded-lg font-bold text-lg border border-red-500/30";
+                        badge.className = "px-3 py-1.5 bg-gray-800 text-gray-300 rounded font-bold text-sm border border-gray-700";
                     }
 
-                    document.getElementById('ai-message').innerText = data.message;
+                    // 🔊 সাউন্ড এবং পুশ নোটিফিকেশন লজিক
+                    if (data.action !== "WAIT ⏳" && lastAction === "WAIT ⏳") {
+                        document.getElementById('alertSound').play().catch(e => console.log("Audio play blocked by browser"));
+                        
+                        // মোবাইলে ব্যাকগ্রাউন্ড নোটিফিকেশন
+                        if (Notification.permission === "granted") {
+                            new Notification("🔥 VIP Signal Alert!", { 
+                                body: `${data.asset} - ${data.action} Signal is Live!\nEntry: ${data.entry || "--"}`,
+                                icon: "https://cdn-icons-png.flaticon.com/512/2950/2950150.png"
+                            });
+                        }
+                    }
+                    lastAction = data.action;
 
+                    // Update Signal Details
                     const detailsBox = document.getElementById('signal-details');
-                    if (data.type === "FOREX") {
+                    if(data.type === "FOREX") {
                         detailsBox.innerHTML = `
-                            <div class="flex justify-between border-b border-gray-800 pb-2">
-                                <span class="text-gray-400 font-semibold text-sm">ENTRY:</span>
-                                <span class="font-bold text-white">${data.entry}</span>
-                            </div>
-                            <div class="flex justify-between border-b border-gray-800 pb-2">
-                                <span class="text-green-400 font-semibold text-sm">TP 1:</span>
-                                <span class="font-bold text-white">${data.tp1}</span>
-                            </div>
-                            <div class="flex justify-between border-b border-gray-800 pb-2">
-                                <span class="text-green-500 font-semibold text-sm">TP 2:</span>
-                                <span class="font-bold text-white">${data.tp2}</span>
-                            </div>
-                            <div class="flex justify-between">
-                                <span class="text-red-400 font-semibold text-sm">SL:</span>
-                                <span class="font-bold text-white">${data.sl}</span>
-                            </div>
+                            <div class="flex justify-between items-center"><span class="text-xs text-gray-400 font-bold">ENTRY:</span><span class="font-bold text-white">${data.entry}</span></div>
+                            <hr class="border-gray-800">
+                            <div class="flex justify-between items-center"><span class="text-xs text-green-500 font-bold">TP 1:</span><span class="font-bold text-green-400">${data.tp1}</span></div>
+                            <hr class="border-gray-800">
+                            <div class="flex justify-between items-center"><span class="text-xs text-green-500 font-bold">TP 2:</span><span class="font-bold text-green-400">${data.tp2}</span></div>
+                            <hr class="border-gray-800">
+                            <div class="flex justify-between items-center"><span class="text-xs text-red-500 font-bold">SL:</span><span class="font-bold text-red-400">${data.sl}</span></div>
+                        `;
+                    } else if (data.type === "BINARY") {
+                        detailsBox.innerHTML = `
+                            <div class="flex justify-between items-center"><span class="text-xs text-gray-400 font-bold">TIMEFRAME:</span><span class="font-bold text-white">${data.timeframe}</span></div>
+                            <hr class="border-gray-800">
+                            <div class="flex justify-between items-center"><span class="text-xs text-gray-400 font-bold">PAYOUT:</span><span class="font-bold text-white">${data.payout}</span></div>
+                            <hr class="border-gray-800">
+                            <div class="flex justify-between items-center"><span class="text-xs text-blue-400 font-bold">STATUS:</span><span class="font-bold text-blue-400">${data.status}</span></div>
                         `;
                     } else {
                         detailsBox.innerHTML = `
-                            <div class="flex justify-between border-b border-gray-800 pb-2">
-                                <span class="text-gray-400 font-semibold text-sm">TIMEFRAME:</span>
-                                <span class="font-bold text-white">${data.timeframe}</span>
-                            </div>
-                            <div class="flex justify-between border-b border-gray-800 pb-2">
-                                <span class="text-yellow-400 font-semibold text-sm">PAYOUT:</span>
-                                <span class="font-bold text-white">${data.payout}</span>
-                            </div>
-                            <div class="flex justify-between">
-                                <span class="text-blue-400 font-semibold text-sm">STATUS:</span>
-                                <span class="font-bold text-green-400">${data.status}</span>
-                            </div>
+                            <div class="flex justify-between items-center"><span class="text-xs text-gray-400 font-bold">TIMEFRAME:</span><span class="font-bold text-gray-500">--</span></div>
+                            <hr class="border-gray-800">
+                            <div class="flex justify-between items-center"><span class="text-xs text-gray-400 font-bold">PAYOUT:</span><span class="font-bold text-gray-500">--</span></div>
+                            <hr class="border-gray-800">
+                            <div class="flex justify-between items-center"><span class="text-xs text-blue-400 font-bold">STATUS:</span><span class="font-bold text-gray-500">Connecting...</span></div>
                         `;
+                    }
+
+                    // 📊 Update History List
+                    const historyList = document.getElementById('history-list');
+                    if(data.history && data.history.length > 0) {
+                        historyList.innerHTML = "";
+                        data.history.forEach(trade => {
+                            let resultColor = "text-gray-400";
+                            if(trade.result.includes("WIN")) resultColor = "text-green-400";
+                            if(trade.result.includes("LOSS")) resultColor = "text-red-400";
+                            if(trade.result.includes("Running")) resultColor = "text-yellow-400";
+                            
+                            historyList.innerHTML += `
+                                <div class="flex justify-between items-center bg-[#0d1117] p-3 rounded-lg border border-gray-800">
+                                    <div>
+                                        <p class="text-xs text-gray-500">${trade.time}</p>
+                                        <p class="font-bold text-sm">${trade.asset} <span class="text-xs ${trade.action.includes('BUY') ? 'text-green-500' : 'text-red-500'}">${trade.action}</span></p>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="font-bold text-sm ${resultColor}">${trade.result}</p>
+                                        <p class="text-xs text-gray-500">Entry: ${trade.entry}</p>
+                                    </div>
+                                </div>
+                            `;
+                        });
+                    } else {
+                        historyList.innerHTML = '<p class="text-sm text-gray-500 text-center py-2">No history yet.</p>';
                     }
                 })
-                .catch(error => console.error('Error:', error));
+                .catch(err => console.log(err));
         }
 
-        // পেজ ওপেন হওয়ার সাথে সাথেই সিগন্যাল খুঁজবে
+        // অটো রিফ্রেশ (প্রতি ৩০ সেকেন্ড পর পর)
         fetchSignal();
-        
-        // প্রতি ৩০ সেকেন্ড পর পর অটোমেটিক নতুন সিগন্যাল আপডেট হবে
         setInterval(fetchSignal, 30000);
     </script>
 </body>
