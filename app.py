@@ -3,6 +3,7 @@ import yfinance as yf
 import ta
 import os
 import traceback
+from datetime import datetime
 
 app = Flask(__name__)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -14,6 +15,10 @@ VIP_USERS = {
     "boss": "gold99",
     "FARHAD": "Fm889896@"
 }
+
+# 📊 বটের হিস্ট্রি এবং লাইভ ট্রেড ট্র্যাকিং মেমরি
+trade_history = []
+active_trade = None
 
 @app.route('/')
 def home():
@@ -32,18 +37,19 @@ def login_api():
     data = request.get_json()
     username = data.get('username')
     password = data.get('password')
-
     if username in VIP_USERS and VIP_USERS[username] == password:
         return jsonify({"status": "success"})
     else:
         return jsonify({"status": "error", "message": "ভুল আইডি বা পাসওয়ার্ড!"})
 
 def analyze_market():
+    global active_trade, trade_history
     try:
         gold_ticker = yf.Ticker("XAUUSD=X")
         gold_data = gold_ticker.history(period="5d", interval="1m")
         
         if not gold_data.empty and len(gold_data) >= 50:
+            # ইন্ডিকেটরগুলো আগের মতোই ১০০% অপরিবর্তিত রাখা হয়েছে
             gold_data['EMA_20'] = ta.trend.ema_indicator(gold_data['Close'].squeeze(), window=20)
             gold_data['EMA_50'] = ta.trend.ema_indicator(gold_data['Close'].squeeze(), window=50)
             gold_data['RSI'] = ta.momentum.rsi(gold_data['Close'].squeeze(), window=14)
@@ -56,46 +62,83 @@ def analyze_market():
             ema50 = float(last_gold['EMA_50'])
             atr = float(last_gold['ATR'])
             
-            if ema20 > ema50 and 40 < rsi < 70:
-                return {
-                    "asset": "GOLD (XAUUSD)", "type": "FOREX", "action": "BUY 🟢",
-                    "entry": f"{close:.2f}", "tp1": f"{close + (atr*1):.2f}", 
-                    "tp2": f"{close + (atr*2):.2f}", "sl": f"{close - (atr*1.5):.2f}",
-                    "status": "Signal Active", "message": "AI Confirmed: Strong Uptrend Detected."
-                }
-            elif ema20 < ema50 and 30 < rsi < 60:
-                return {
-                    "asset": "GOLD (XAUUSD)", "type": "FOREX", "action": "SELL 🔴",
-                    "entry": f"{close:.2f}", "tp1": f"{close - (atr*1):.2f}", 
-                    "tp2": f"{close - (atr*2):.2f}", "sl": f"{close + (atr*1.5):.2f}",
-                    "status": "Signal Active", "message": "AI Confirmed: Strong Downtrend Detected."
-                }
+            # 🔍 অটোমেটিক প্রফিট/লস চেক করা (ব্যাকগ্রাউন্ডে)
+            if active_trade and active_trade['asset'] == "GOLD (XAUUSD)":
+                if active_trade['action'] == 'BUY 🟢':
+                    if close >= active_trade['tp1_val']:
+                        active_trade['result'] = 'WIN ✅'
+                        trade_history.insert(0, active_trade)
+                        active_trade = None
+                    elif close <= active_trade['sl_val']:
+                        active_trade['result'] = 'LOSS ❌'
+                        trade_history.insert(0, active_trade)
+                        active_trade = None
+                elif active_trade['action'] == 'SELL 🔴':
+                    if close <= active_trade['tp1_val']:
+                        active_trade['result'] = 'WIN ✅'
+                        trade_history.insert(0, active_trade)
+                        active_trade = None
+                    elif close >= active_trade['sl_val']:
+                        active_trade['result'] = 'LOSS ❌'
+                        trade_history.insert(0, active_trade)
+                        active_trade = None
 
+            # 🎯 নতুন সিগন্যাল খোঁজা (আপনার দেওয়া মূল লজিকে)
+            if active_trade == None:
+                if ema20 > ema50 and 40 < rsi < 70:
+                    active_trade = {
+                        "time": datetime.now().strftime("%I:%M %p"),
+                        "asset": "GOLD (XAUUSD)", "type": "FOREX", "action": "BUY 🟢",
+                        "entry": close, "tp1_val": close + (atr*1), 
+                        "tp2_val": close + (atr*2), "sl_val": close - (atr*1.5),
+                        "result": "Running ⏳"
+                    }
+                elif ema20 < ema50 and 30 < rsi < 60:
+                    active_trade = {
+                        "time": datetime.now().strftime("%I:%M %p"),
+                        "asset": "GOLD (XAUUSD)", "type": "FOREX", "action": "SELL 🔴",
+                        "entry": close, "tp1_val": close - (atr*1), 
+                        "tp2_val": close - (atr*2), "sl_val": close + (atr*1.5),
+                        "result": "Running ⏳"
+                    }
+
+        # বাইনারি লজিক (অপরিবর্তিত)
         eu_ticker = yf.Ticker("EURUSD=X")
         eu_data = eu_ticker.history(period="5d", interval="1m")
-        
-        if not eu_data.empty and len(eu_data) >= 14:
+        if not eu_data.empty and len(eu_data) >= 14 and active_trade == None:
             eu_data['RSI'] = ta.momentum.rsi(eu_data['Close'].squeeze(), window=14)
             last_eu = eu_data.iloc[-1]
             eu_rsi = float(last_eu['RSI'])
-            
             if eu_rsi < 30:
                 return {
                     "asset": "EUR/USD", "type": "BINARY", "action": "UP 🟢",
                     "timeframe": "1 Minute", "payout": "80%+",
-                    "status": "Signal Active", "message": "Oversold Zone! 1 Min Reversal Expected."
+                    "status": "Signal Active", "message": "Oversold Zone! 1 Min Reversal Expected.",
+                    "history": trade_history[:10]
                 }
             elif eu_rsi > 70:
                 return {
                     "asset": "EUR/USD", "type": "BINARY", "action": "DOWN 🔴",
                     "timeframe": "1 Minute", "payout": "80%+",
-                    "status": "Signal Active", "message": "Overbought Zone! 1 Min Reversal Expected."
+                    "status": "Signal Active", "message": "Overbought Zone! 1 Min Reversal Expected.",
+                    "history": trade_history[:10]
                 }
+
+        # রেসপন্স তৈরি করা
+        if active_trade:
+            return {
+                "asset": active_trade['asset'], "type": active_trade['type'], "action": active_trade['action'],
+                "entry": f"{active_trade['entry']:.2f}", "tp1": f"{active_trade['tp1_val']:.2f}", 
+                "tp2": f"{active_trade['tp2_val']:.2f}", "sl": f"{active_trade['sl_val']:.2f}",
+                "status": "Running...", "message": "AI Confirmed: Trade is Currently Running.",
+                "history": trade_history[:10]
+            }
 
         return {
             "asset": "MARKET SCANNING...", "type": "WAITING", "action": "WAIT ⏳",
             "timeframe": "--", "payout": "--", "entry": "--", "tp1": "--", "tp2": "--", "sl": "--",
-            "status": "Analyzing...", "message": "মার্কেট ম্যাচ করেনি। এআই উপযুক্ত এন্ট্রির জন্য অপেক্ষা করছে..."
+            "status": "Analyzing...", "message": "মার্কেট ম্যাচ করেনি। এআই উপযুক্ত এন্ট্রির জন্য অপেক্ষা করছে...",
+            "history": trade_history[:10]
         }
     except Exception as e:
         print("AI Error:", e)
@@ -103,7 +146,8 @@ def analyze_market():
         return {
             "asset": "SCANNING...", "type": "WAITING", "action": "WAIT ⏳",
             "timeframe": "--", "payout": "--", "entry": "--", "tp1": "--", "tp2": "--", "sl": "--",
-            "status": "Connecting...", "message": "লাইভ ডেটা ফেচ করা হচ্ছে, অপেক্ষা করুন..."
+            "status": "Connecting...", "message": "লাইভ ডেটা ফেচ করা হচ্ছে, অপেক্ষা করুন...",
+            "history": trade_history[:10] if trade_history else []
         }
 
 @app.route('/api/get_signal')
