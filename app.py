@@ -45,24 +45,27 @@ def login_api():
 def analyze_market():
     global active_trade, trade_history
     try:
-        gold_ticker = yf.Ticker("XAUUSD=X")
+        # ডেটা গ্যাপ এড়ানোর জন্য GC=F ব্যবহার করা হলো, কিন্তু স্প্রেড কমানোর জন্য প্রাইস এডজাস্ট করা হবে
+        gold_ticker = yf.Ticker("GC=F")
         gold_data = gold_ticker.history(period="5d", interval="1m")
         
         if not gold_data.empty and len(gold_data) >= 50:
-            # ইন্ডিকেটরগুলো আগের মতোই ১০০% অপরিবর্তিত রাখা হয়েছে
             gold_data['EMA_20'] = ta.trend.ema_indicator(gold_data['Close'].squeeze(), window=20)
             gold_data['EMA_50'] = ta.trend.ema_indicator(gold_data['Close'].squeeze(), window=50)
             gold_data['RSI'] = ta.momentum.rsi(gold_data['Close'].squeeze(), window=14)
             gold_data['ATR'] = ta.volatility.average_true_range(gold_data['High'].squeeze(), gold_data['Low'].squeeze(), gold_data['Close'].squeeze(), window=14)
             
             last_gold = gold_data.iloc[-1]
-            close = float(last_gold['Close'])
+            
+            # 💡 স্পট মার্কেটের সাথে মেলানোর জন্য ফিউচার প্রাইস থেকে আনুমানিক ২৫-৩০ পিপস স্প্রেড মাইনাস করা হলো
+            raw_close = float(last_gold['Close'])
+            close = raw_close - 24.50  
+            
             rsi = float(last_gold['RSI'])
             ema20 = float(last_gold['EMA_20'])
             ema50 = float(last_gold['EMA_50'])
             atr = float(last_gold['ATR'])
             
-            # 🔍 অটোমেটিক প্রফিট/লস চেক করা (ব্যাকগ্রাউন্ডে)
             if active_trade and active_trade['asset'] == "GOLD (XAUUSD)":
                 if active_trade['action'] == 'BUY 🟢':
                     if close >= active_trade['tp1_val']:
@@ -83,7 +86,6 @@ def analyze_market():
                         trade_history.insert(0, active_trade)
                         active_trade = None
 
-            # 🎯 নতুন সিগন্যাল খোঁজা (আপনার দেওয়া মূল লজিকে)
             if active_trade == None:
                 if ema20 > ema50 and 40 < rsi < 70:
                     active_trade = {
@@ -102,7 +104,6 @@ def analyze_market():
                         "result": "Running ⏳"
                     }
 
-        # বাইনারি লজিক (অপরিবর্তিত)
         eu_ticker = yf.Ticker("EURUSD=X")
         eu_data = eu_ticker.history(period="5d", interval="1m")
         if not eu_data.empty and len(eu_data) >= 14 and active_trade == None:
@@ -124,7 +125,6 @@ def analyze_market():
                     "history": trade_history[:10]
                 }
 
-        # রেসপন্স তৈরি করা
         if active_trade:
             return {
                 "asset": active_trade['asset'], "type": active_trade['type'], "action": active_trade['action'],
