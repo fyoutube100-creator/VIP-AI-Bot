@@ -40,8 +40,7 @@ def login_api():
 
 def analyze_market():
     try:
-        # yf.download এর বদলে yf.Ticker().history() ব্যবহার করা হলো যাতে ডেটা একদম ক্লিয়ার আসে
-       gold_ticker = yf.Ticker("XAUUSD=X")
+        gold_ticker = yf.Ticker("XAUUSD=X")
         gold_data = gold_ticker.history(period="5d", interval="1m")
         
         if not gold_data.empty and len(gold_data) >= 50:
