@@ -42,7 +42,7 @@ def analyze_market():
     try:
         # yf.download এর বদলে yf.Ticker().history() ব্যবহার করা হলো যাতে ডেটা একদম ক্লিয়ার আসে
        gold_ticker = yf.Ticker("XAUUSD=X")
-        gold_data = gold_ticker.history(period="5d", interval="15m")
+        gold_data = gold_ticker.history(period="5d", interval="1m")
         
         if not gold_data.empty and len(gold_data) >= 50:
             gold_data['EMA_20'] = ta.trend.ema_indicator(gold_data['Close'].squeeze(), window=20)
