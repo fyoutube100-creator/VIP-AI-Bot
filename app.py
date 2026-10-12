@@ -40,8 +40,10 @@ def login_api():
 
 def analyze_market():
     try:
-        # সোমবারের ডেটা গ্যাপ পূরণের জন্য period="5d" করা হয়েছে
-        gold_data = yf.download("GC=F", period="5d", interval="15m", progress=False)
+        # yf.download এর বদলে yf.Ticker().history() ব্যবহার করা হলো যাতে ডেটা একদম ক্লিয়ার আসে
+        gold_ticker = yf.Ticker("GC=F")
+        gold_data = gold_ticker.history(period="5d", interval="15m")
+        
         if not gold_data.empty and len(gold_data) >= 50:
             gold_data['EMA_20'] = ta.trend.ema_indicator(gold_data['Close'].squeeze(), window=20)
             gold_data['EMA_50'] = ta.trend.ema_indicator(gold_data['Close'].squeeze(), window=50)
@@ -70,7 +72,9 @@ def analyze_market():
                     "status": "Signal Active", "message": "AI Confirmed: Strong Downtrend Detected."
                 }
 
-        eu_data = yf.download("EURUSD=X", period="5d", interval="1m", progress=False)
+        eu_ticker = yf.Ticker("EURUSD=X")
+        eu_data = eu_ticker.history(period="5d", interval="1m")
+        
         if not eu_data.empty and len(eu_data) >= 14:
             eu_data['RSI'] = ta.momentum.rsi(eu_data['Close'].squeeze(), window=14)
             last_eu = eu_data.iloc[-1]
