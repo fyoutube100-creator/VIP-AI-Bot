@@ -45,7 +45,7 @@ def login_api():
 def analyze_market():
     global active_trade, trade_history
     try:
-        # ডেটা গ্যাপ এড়ানোর জন্য GC=F ব্যবহার করা হলো, কিন্তু স্প্রেড কমানোর জন্য প্রাইস এডজাস্ট করা হবে
+        # ফিউচার ডেটা ব্যবহার করে স্পট প্রাইস মেলানোর ট্রিক
         gold_ticker = yf.Ticker("GC=F")
         gold_data = gold_ticker.history(period="5d", interval="1m")
         
@@ -57,7 +57,7 @@ def analyze_market():
             
             last_gold = gold_data.iloc[-1]
             
-            # 💡 স্পট মার্কেটের সাথে মেলানোর জন্য ফিউচার প্রাইস থেকে আনুমানিক ২৫-৩০ পিপস স্প্রেড মাইনাস করা হলো
+            # স্পট মার্কেটের সাথে প্রাইস মেলানোর জন্য স্প্রেড মাইনাস
             raw_close = float(last_gold['Close'])
             close = raw_close - 24.50  
             
@@ -66,6 +66,7 @@ def analyze_market():
             ema50 = float(last_gold['EMA_50'])
             atr = float(last_gold['ATR'])
             
+            # 🔍 অটোমেটিক প্রফিট/লস চেক করা 
             if active_trade and active_trade['asset'] == "GOLD (XAUUSD)":
                 if active_trade['action'] == 'BUY 🟢':
                     if close >= active_trade['tp1_val']:
@@ -86,24 +87,30 @@ def analyze_market():
                         trade_history.insert(0, active_trade)
                         active_trade = None
 
+            # 🎯 নতুন সিগন্যাল (স্ট্যান্ডার্ড ~30 Pips SL/TP1, ~50 Pips TP2)
             if active_trade == None:
                 if ema20 > ema50 and 40 < rsi < 70:
                     active_trade = {
                         "time": datetime.now().strftime("%I:%M %p"),
                         "asset": "GOLD (XAUUSD)", "type": "FOREX", "action": "BUY 🟢",
-                        "entry": close, "tp1_val": close + (atr*1), 
-                        "tp2_val": close + (atr*2), "sl_val": close - (atr*1.5),
+                        "entry": close, 
+                        "tp1_val": close + (atr * 3), 
+                        "tp2_val": close + (atr * 5), 
+                        "sl_val": close - (atr * 3),
                         "result": "Running ⏳"
                     }
                 elif ema20 < ema50 and 30 < rsi < 60:
                     active_trade = {
                         "time": datetime.now().strftime("%I:%M %p"),
                         "asset": "GOLD (XAUUSD)", "type": "FOREX", "action": "SELL 🔴",
-                        "entry": close, "tp1_val": close - (atr*1), 
-                        "tp2_val": close - (atr*2), "sl_val": close + (atr*1.5),
+                        "entry": close, 
+                        "tp1_val": close - (atr * 3), 
+                        "tp2_val": close - (atr * 5), 
+                        "sl_val": close + (atr * 3),
                         "result": "Running ⏳"
                     }
 
+        # বাইনারি লজিক
         eu_ticker = yf.Ticker("EURUSD=X")
         eu_data = eu_ticker.history(period="5d", interval="1m")
         if not eu_data.empty and len(eu_data) >= 14 and active_trade == None:
@@ -125,6 +132,7 @@ def analyze_market():
                     "history": trade_history[:10]
                 }
 
+        # রেসপন্স তৈরি করা
         if active_trade:
             return {
                 "asset": active_trade['asset'], "type": active_trade['type'], "action": active_trade['action'],
