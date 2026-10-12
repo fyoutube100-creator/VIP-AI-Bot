@@ -2,16 +2,17 @@ from flask import Flask, jsonify, send_from_directory, request
 import yfinance as yf
 import ta
 import os
+import traceback
 
 app = Flask(__name__)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-# 🔒 VIP মেম্বারদের আইডি ও পাসওয়ার্ডের লিস্ট (আপনি চাইলে পরে আরও বাড়াতে পারবেন)
+# 🔒 VIP মেম্বারদের আইডি ও পাসওয়ার্ড
 VIP_USERS = {
     "admin": "12345",
     "vip1": "blackshoter",
     "boss": "gold99",
-    "FARHAD":"Fm889896@"
+    "FARHAD": "Fm889896@"
 }
 
 @app.route('/')
@@ -26,7 +27,6 @@ def bot_dashboard():
 def login_page():
     return send_from_directory(BASE_DIR, 'login.html')
 
-# 🔒 লগইন চেক করার সিকিউরিটি সিস্টেম
 @app.route('/api/login', methods=['POST'])
 def login_api():
     data = request.get_json()
@@ -40,8 +40,9 @@ def login_api():
 
 def analyze_market():
     try:
-        gold_data = yf.download("GC=F", period="1d", interval="15m", progress=False)
-        if not gold_data.empty:
+        # সোমবারের ডেটা গ্যাপ পূরণের জন্য period="5d" করা হয়েছে
+        gold_data = yf.download("GC=F", period="5d", interval="15m", progress=False)
+        if not gold_data.empty and len(gold_data) >= 50:
             gold_data['EMA_20'] = ta.trend.ema_indicator(gold_data['Close'].squeeze(), window=20)
             gold_data['EMA_50'] = ta.trend.ema_indicator(gold_data['Close'].squeeze(), window=50)
             gold_data['RSI'] = ta.momentum.rsi(gold_data['Close'].squeeze(), window=14)
@@ -69,8 +70,8 @@ def analyze_market():
                     "status": "Signal Active", "message": "AI Confirmed: Strong Downtrend Detected."
                 }
 
-        eu_data = yf.download("EURUSD=X", period="1d", interval="1m", progress=False)
-        if not eu_data.empty:
+        eu_data = yf.download("EURUSD=X", period="5d", interval="1m", progress=False)
+        if not eu_data.empty and len(eu_data) >= 14:
             eu_data['RSI'] = ta.momentum.rsi(eu_data['Close'].squeeze(), window=14)
             last_eu = eu_data.iloc[-1]
             eu_rsi = float(last_eu['RSI'])
@@ -94,6 +95,8 @@ def analyze_market():
             "status": "Analyzing...", "message": "মার্কেট ম্যাচ করেনি। এআই উপযুক্ত এন্ট্রির জন্য অপেক্ষা করছে..."
         }
     except Exception as e:
+        print("AI Error:", e)
+        traceback.print_exc()
         return {
             "asset": "SCANNING...", "type": "WAITING", "action": "WAIT ⏳",
             "timeframe": "--", "payout": "--", "entry": "--", "tp1": "--", "tp2": "--", "sl": "--",
