@@ -56,7 +56,7 @@
         <div id="home" class="tab-content">
             <div class="bg-[#161b22] border border-gray-800 rounded-xl p-1 shadow-lg overflow-hidden relative">
                 <p class="absolute top-4 left-4 z-10 text-xs bg-black/60 px-2 py-1 rounded text-white font-bold tracking-widest border border-gray-700">LIVE SATELLITE VIEW</p>
-                <img src="https://i.pinimg.com/originals/c9/22/68/c92268d92cf2dbf96e3195683d9e14fb.gif" class="w-full h-64 object-cover rounded-lg opacity-80 mix-blend-screen" alt="Satellite View">
+                <img src="https://media.tenor.com/V9X9eL-Z6n8AAAAi/earth-grid.gif" class="w-full h-64 object-cover rounded-lg opacity-80 mix-blend-screen" alt="Satellite View">
                 <div class="p-4 text-center">
                     <h2 class="text-xl font-bold mb-2">Welcome to Black Shoter AI</h2>
                     <p class="text-xs text-gray-400">World's most advanced AI trading system. Real-time market data synchronized.</p>
@@ -117,7 +117,13 @@
                 </div>
 
                 <form id="aiForm" class="space-y-4" onsubmit="submitForm(event)">
-                    <div><label class="text-xs font-bold text-gray-300">১. পেমেন্ট আইডি (Payment ID)</label><input type="text" id="f1" required class="w-full mt-1 bg-[#0d1117] border border-gray-700 rounded-lg p-2.5 text-sm text-white focus:border-blue-500 outline-none" placeholder="অফিসিয়াল ওয়ালেট একাউন্ট"></div>
+                    <div>
+                        <label class="text-xs font-bold text-gray-300">১. পেমেন্ট আইডি (Payment ID)</label>
+                        <div class="flex gap-2 mt-1">
+                            <input type="text" id="f1" value="TBah6sDqCdJneVTi8Qhiv4Qb7yAVoZvhJr" readonly class="w-full bg-[#0d1117] border border-gray-700 rounded-lg p-2.5 text-sm text-yellow-500 font-bold focus:border-blue-500 outline-none">
+                            <button type="button" onclick="copyWallet()" class="bg-blue-600 hover:bg-blue-500 text-white font-bold px-4 rounded-lg transition text-xs whitespace-nowrap">কপি করুন</button>
+                        </div>
+                    </div>
                     <div><label class="text-xs font-bold text-gray-300">২. আপনার নাম (Your Name)</label><input type="text" id="f2" required class="w-full mt-1 bg-[#0d1117] border border-gray-700 rounded-lg p-2.5 text-sm text-white focus:border-blue-500 outline-none" placeholder="আপনার পূর্ণ নাম লিখুন"></div>
                     <div><label class="text-xs font-bold text-gray-300">৩. টেলিগ্রাম আইডি (Telegram ID)</label><input type="text" id="f3" required class="w-full mt-1 bg-[#0d1117] border border-gray-700 rounded-lg p-2.5 text-sm text-white focus:border-blue-500 outline-none" placeholder="@username লিখুন"></div>
                     <div><label class="text-xs font-bold text-gray-300">৪. ডিপোজিট এমাউন্ট (Deposit Amount)</label><input type="number" id="f4" required class="w-full mt-1 bg-[#0d1117] border border-gray-700 rounded-lg p-2.5 text-sm text-white focus:border-blue-500 outline-none" placeholder="যেমন: 50, 100, 200 ... (USD)"></div>
@@ -175,7 +181,16 @@
             else { event.currentTarget.classList.add('border-b', 'border-blue-500'); }
         }
 
-        // 📝 Telegram Form Submit (Now properly calling the secure backend API)
+        // ওয়ালেট এড্রেস কপি করার ফাংশন
+        function copyWallet() {
+            const walletInput = document.getElementById("f1");
+            walletInput.select();
+            walletInput.setSelectionRange(0, 99999);
+            navigator.clipboard.writeText(walletInput.value).then(() => {
+                alert("ওয়ালেট এড্রেস কপি হয়েছে: " + walletInput.value);
+            });
+        }
+
         function submitForm(event) {
             event.preventDefault();
             const btn = document.getElementById('submitBtn');
@@ -202,6 +217,7 @@
                 if(data.status === "success") {
                     alert('আপনার ফর্মটি সফলভাবে এডমিনের কাছে পাঠানো হয়েছে!');
                     document.getElementById('aiForm').reset();
+                    document.getElementById('f1').value = "TBah6sDqCdJneVTi8Qhiv4Qb7yAVoZvhJr"; 
                 } else {
                     alert('Error sending data! Server issue.');
                 }
