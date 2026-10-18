@@ -56,7 +56,8 @@
         <div id="home" class="tab-content">
             <div class="bg-[#161b22] border border-gray-800 rounded-xl p-1 shadow-lg overflow-hidden relative">
                 <p class="absolute top-4 left-4 z-10 text-xs bg-black/60 px-2 py-1 rounded text-white font-bold tracking-widest border border-gray-700">LIVE SATELLITE VIEW</p>
-                <img src="https://media.tenor.com/V9X9eL-Z6n8AAAAi/earth-grid.gif" class="w-full h-64 object-cover rounded-lg opacity-80 mix-blend-screen" alt="Satellite View">
+                <!-- উইকিপিডিয়া সার্ভারের পারফেক্ট GIF (কখনও ব্লক হবে না) -->
+                <img src="https://upload.wikimedia.org/wikipedia/commons/2/2c/Rotating_earth_%28large%29.gif" class="w-full h-64 object-cover rounded-lg opacity-80 mix-blend-screen" alt="Satellite View">
                 <div class="p-4 text-center">
                     <h2 class="text-xl font-bold mb-2">Welcome to Black Shoter AI</h2>
                     <p class="text-xs text-gray-400">World's most advanced AI trading system. Real-time market data synchronized.</p>
@@ -181,7 +182,6 @@
             else { event.currentTarget.classList.add('border-b', 'border-blue-500'); }
         }
 
-        // ওয়ালেট এড্রেস কপি করার ফাংশন
         function copyWallet() {
             const walletInput = document.getElementById("f1");
             walletInput.select();
@@ -250,11 +250,13 @@
                 const badge = document.getElementById('action-badge');
                 badge.innerText = data.action;
                 
+                // 🛑 উইকেন্ড ব্যাজ স্টাইল যুক্ত করা হয়েছে
                 if(data.action.includes("BUY") || data.action.includes("UP")) badge.className = "px-3 py-1.5 bg-green-900/80 text-green-400 rounded font-bold text-sm border border-green-500 animate-pulse";
                 else if(data.action.includes("SELL") || data.action.includes("DOWN")) badge.className = "px-3 py-1.5 bg-red-900/80 text-red-400 rounded font-bold text-sm border border-red-500 animate-pulse";
+                else if(data.action.includes("WEEKEND")) badge.className = "px-3 py-1.5 bg-yellow-900/80 text-yellow-400 rounded font-bold text-sm border border-yellow-500";
                 else badge.className = "px-3 py-1.5 bg-gray-800 text-gray-300 rounded font-bold text-sm border border-gray-700";
 
-                if (data.action !== "WAIT ⏳" && lastAction === "WAIT ⏳") {
+                if (data.action !== "WAIT ⏳" && data.action !== "WEEKEND ⏸️" && lastAction !== data.action) {
                     document.getElementById('alertSound').play().catch(e => console.log("Audio play blocked"));
                     try { if (Notification.permission === "granted") new Notification("🔥 VIP Signal Alert!", { body: `${data.asset} - ${data.action} Live!`, icon: "https://cdn-icons-png.flaticon.com/512/2950/2950150.png" }); } catch (error) {}
                 }
@@ -263,7 +265,7 @@
                 const detailsBox = document.getElementById('signal-details');
                 if(data.type === "FOREX") detailsBox.innerHTML = `<div class="flex justify-between items-center"><span class="text-xs text-gray-400 font-bold">ENTRY:</span><span class="font-bold text-white">${data.entry}</span></div><hr class="border-gray-800/50"><div class="flex justify-between items-center"><span class="text-xs text-green-500 font-bold">TP 1:</span><span class="font-bold text-green-400">${data.tp1}</span></div><hr class="border-gray-800/50"><div class="flex justify-between items-center"><span class="text-xs text-green-500 font-bold">TP 2:</span><span class="font-bold text-green-400">${data.tp2}</span></div><hr class="border-gray-800/50"><div class="flex justify-between items-center"><span class="text-xs text-red-500 font-bold">SL:</span><span class="font-bold text-red-400">${data.sl}</span></div>`;
                 else if (data.type === "BINARY") detailsBox.innerHTML = `<div class="flex justify-between items-center"><span class="text-xs text-gray-400 font-bold">TIMEFRAME:</span><span class="font-bold text-white">${data.timeframe}</span></div><hr class="border-gray-800/50"><div class="flex justify-between items-center"><span class="text-xs text-gray-400 font-bold">PAYOUT:</span><span class="font-bold text-white">${data.payout}</span></div><hr class="border-gray-800/50"><div class="flex justify-between items-center"><span class="text-xs text-blue-400 font-bold">STATUS:</span><span class="font-bold text-blue-400">${data.status}</span></div>`;
-                else detailsBox.innerHTML = `<div class="flex justify-between items-center"><span class="text-xs text-gray-400 font-bold">TIMEFRAME:</span><span class="font-bold text-gray-500">--</span></div><hr class="border-gray-800/50"><div class="flex justify-between items-center"><span class="text-xs text-gray-400 font-bold">PAYOUT:</span><span class="font-bold text-gray-500">--</span></div><hr class="border-gray-800/50"><div class="flex justify-between items-center"><span class="text-xs text-blue-400 font-bold">STATUS:</span><span class="font-bold text-gray-500">Connecting...</span></div>`;
+                else detailsBox.innerHTML = `<div class="flex justify-between items-center"><span class="text-xs text-gray-400 font-bold">TIMEFRAME:</span><span class="font-bold text-gray-500">--</span></div><hr class="border-gray-800/50"><div class="flex justify-between items-center"><span class="text-xs text-gray-400 font-bold">PAYOUT:</span><span class="font-bold text-gray-500">--</span></div><hr class="border-gray-800/50"><div class="flex justify-between items-center"><span class="text-xs text-blue-400 font-bold">STATUS:</span><span class="font-bold text-gray-500">${data.status}</span></div>`;
 
                 const historyList = document.getElementById('history-list');
                 if(data.history && data.history.length > 0) {
