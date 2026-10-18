@@ -4,6 +4,8 @@ import ta
 import os
 import traceback
 from datetime import datetime
+import urllib.request
+import json
 
 app = Flask(__name__)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -13,10 +15,9 @@ VIP_USERS = {
     "admin": "12345",
     "vip1": "blackshoter",
     "boss": "gold99",
-    "FARHAD": "0000Ai"
+    "FARHAD": "Fm889896@"
 }
 
-# 📊 বটের হিস্ট্রি এবং লাইভ ট্রেড ট্র্যাকিং মেমরি
 trade_history = []
 active_trade = None
 
@@ -42,10 +43,30 @@ def login_api():
     else:
         return jsonify({"status": "error", "message": "ভুল আইডি বা পাসওয়ার্ড!"})
 
+# 📩 টেলিগ্রাম ফর্ম সাবমিট API (টোকেন সুরক্ষিত)
+@app.route('/api/submit_form', methods=['POST'])
+def submit_form():
+    try:
+        data = request.get_json()
+        botToken = "8527725513:AAH9wF2xZ8cBN_QUFmjuCYEiFvEXzBa_UOY"
+        chatId = "7204862590"
+        message = data.get('message')
+        
+        url = f"https://api.telegram.org/bot{botToken}/sendMessage"
+        req = urllib.request.Request(
+            url, 
+            data=json.dumps({'chat_id': chatId, 'text': message, 'parse_mode': 'Markdown'}).encode('utf-8'), 
+            headers={'Content-Type': 'application/json'}
+        )
+        urllib.request.urlopen(req)
+        return jsonify({"status": "success"})
+    except Exception as e:
+        print("Telegram Error:", e)
+        return jsonify({"status": "error"})
+
 def analyze_market():
     global active_trade, trade_history
     try:
-        # ফিউচার ডেটা ব্যবহার করে স্পট প্রাইস মেলানোর ট্রিক
         gold_ticker = yf.Ticker("GC=F")
         gold_data = gold_ticker.history(period="5d", interval="1m")
         
@@ -56,8 +77,6 @@ def analyze_market():
             gold_data['ATR'] = ta.volatility.average_true_range(gold_data['High'].squeeze(), gold_data['Low'].squeeze(), gold_data['Close'].squeeze(), window=14)
             
             last_gold = gold_data.iloc[-1]
-            
-            # স্পট মার্কেটের সাথে প্রাইস মেলানোর জন্য স্প্রেড মাইনাস
             raw_close = float(last_gold['Close'])
             close = raw_close - 24.50  
             
@@ -66,7 +85,6 @@ def analyze_market():
             ema50 = float(last_gold['EMA_50'])
             atr = float(last_gold['ATR'])
             
-            # 🔍 অটোমেটিক প্রফিট/লস চেক করা 
             if active_trade and active_trade['asset'] == "GOLD (XAUUSD)":
                 if active_trade['action'] == 'BUY 🟢':
                     if close >= active_trade['tp1_val']:
@@ -87,30 +105,22 @@ def analyze_market():
                         trade_history.insert(0, active_trade)
                         active_trade = None
 
-            # 🎯 নতুন সিগন্যাল (স্ট্যান্ডার্ড ~30 Pips SL/TP1, ~50 Pips TP2)
             if active_trade == None:
                 if ema20 > ema50 and 40 < rsi < 70:
                     active_trade = {
                         "time": datetime.now().strftime("%I:%M %p"),
                         "asset": "GOLD (XAUUSD)", "type": "FOREX", "action": "BUY 🟢",
-                        "entry": close, 
-                        "tp1_val": close + (atr * 3), 
-                        "tp2_val": close + (atr * 5), 
-                        "sl_val": close - (atr * 3),
+                        "entry": close, "tp1_val": close + (atr * 3), "tp2_val": close + (atr * 5), "sl_val": close - (atr * 3),
                         "result": "Running ⏳"
                     }
                 elif ema20 < ema50 and 30 < rsi < 60:
                     active_trade = {
                         "time": datetime.now().strftime("%I:%M %p"),
                         "asset": "GOLD (XAUUSD)", "type": "FOREX", "action": "SELL 🔴",
-                        "entry": close, 
-                        "tp1_val": close - (atr * 3), 
-                        "tp2_val": close - (atr * 5), 
-                        "sl_val": close + (atr * 3),
+                        "entry": close, "tp1_val": close - (atr * 3), "tp2_val": close - (atr * 5), "sl_val": close + (atr * 3),
                         "result": "Running ⏳"
                     }
 
-        # বাইনারি লজিক
         eu_ticker = yf.Ticker("EURUSD=X")
         eu_data = eu_ticker.history(period="5d", interval="1m")
         if not eu_data.empty and len(eu_data) >= 14 and active_trade == None:
@@ -132,7 +142,6 @@ def analyze_market():
                     "history": trade_history[:10]
                 }
 
-        # রেসপন্স তৈরি করা
         if active_trade:
             return {
                 "asset": active_trade['asset'], "type": active_trade['type'], "action": active_trade['action'],
