@@ -43,7 +43,6 @@ def login_api():
     else:
         return jsonify({"status": "error", "message": "ভুল আইডি বা পাসওয়ার্ড!"})
 
-# 📩 টেলিগ্রাম ফর্ম সাবমিট API (টোকেন সুরক্ষিত)
 @app.route('/api/submit_form', methods=['POST'])
 def submit_form():
     try:
@@ -67,6 +66,16 @@ def submit_form():
 def analyze_market():
     global active_trade, trade_history
     try:
+        # 🛑 উইকেন্ড (শনি ও রবি) চেক লজিক
+        current_day = datetime.now().weekday()
+        if current_day >= 5: # 5 = Saturday, 6 = Sunday
+            return {
+                "asset": "MARKET CLOSED", "type": "WEEKEND", "action": "WEEKEND ⏸️",
+                "timeframe": "--", "payout": "--", "entry": "--", "tp1": "--", "tp2": "--", "sl": "--",
+                "status": "Market Offline", "message": "আজ উইকেন্ড! ফরেক্স মার্কেট বন্ধ রয়েছে। সোমবার আবার সিগন্যাল শুরু হবে।",
+                "history": trade_history[:10] if trade_history else []
+            }
+
         gold_ticker = yf.Ticker("GC=F")
         gold_data = gold_ticker.history(period="5d", interval="1m")
         
