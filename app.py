@@ -13,7 +13,7 @@ VIP_USERS = {
     "admin": "12345",
     "vip1": "blackshoter",
     "boss": "gold99",
-    "FARHAD": "Fm889896@"
+    "FARHAD": "0000Ai"
 }
 
 # 📊 বটের হিস্ট্রি এবং লাইভ ট্রেড ট্র্যাকিং মেমরি
