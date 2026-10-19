@@ -47,10 +47,15 @@ def login_api():
 def submit_form():
     try:
         data = request.get_json()
-        botToken = "8527725513:AAH9wF2xZ8cBN_QUFmjuCYEiFvEXzBa_UOY"
+        # 🛑 টোকেনটি এখন সার্ভারের সিক্রেট ভেরিয়েবল থেকে আসবে
+        botToken = os.environ.get('TELEGRAM_BOT_TOKEN')
         chatId = "7204862590"
         message = data.get('message')
         
+        if not botToken:
+            print("Error: Telegram Token not found in Environment Variables!")
+            return jsonify({"status": "error"})
+
         url = f"https://api.telegram.org/bot{botToken}/sendMessage"
         req = urllib.request.Request(
             url, 
@@ -66,9 +71,8 @@ def submit_form():
 def analyze_market():
     global active_trade, trade_history
     try:
-        # 🛑 উইকেন্ড (শনি ও রবি) চেক লজিক
         current_day = datetime.now().weekday()
-        if current_day >= 5: # 5 = Saturday, 6 = Sunday
+        if current_day >= 5: 
             return {
                 "asset": "MARKET CLOSED", "type": "WEEKEND", "action": "WEEKEND ⏸️",
                 "timeframe": "--", "payout": "--", "entry": "--", "tp1": "--", "tp2": "--", "sl": "--",
@@ -182,3 +186,4 @@ def get_signal():
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
+
