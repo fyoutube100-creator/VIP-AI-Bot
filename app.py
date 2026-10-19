@@ -12,7 +12,7 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # 🔒 VIP মেম্বারদের আইডি ও পাসওয়ার্ড
 VIP_USERS = {
-    "admin": "12345",
+    "Fahim": "Irfa",
     "vip1": "blackshoter",
     "boss": "gold99",
     "FARHAD": "Fm889896@"
