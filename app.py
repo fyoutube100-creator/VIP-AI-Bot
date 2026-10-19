@@ -12,10 +12,10 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # 🔒 VIP মেম্বারদের আইডি ও পাসওয়ার্ড
 VIP_USERS = {
-    "Fahim": "Irfa",
+    "Fahim": "irfa",
     "vip1": "blackshoter",
     "boss": "gold99",
-    "FARHAD": "Fm889896@"
+    "NOUSE": "NOTUSE@"
 }
 
 trade_history = []
@@ -47,13 +47,12 @@ def login_api():
 def submit_form():
     try:
         data = request.get_json()
-        # 🛑 টোকেনটি এখন সার্ভারের সিক্রেট ভেরিয়েবল থেকে আসবে
+        # টেলিগ্রাম টোকেন সিকিউর রাখা হয়েছে
         botToken = os.environ.get('TELEGRAM_BOT_TOKEN')
         chatId = "7204862590"
         message = data.get('message')
         
         if not botToken:
-            print("Error: Telegram Token not found in Environment Variables!")
             return jsonify({"status": "error"})
 
         url = f"https://api.telegram.org/bot{botToken}/sendMessage"
@@ -71,6 +70,7 @@ def submit_form():
 def analyze_market():
     global active_trade, trade_history
     try:
+        # 🛑 উইকেন্ড (শনি ও রবি) চেক
         current_day = datetime.now().weekday()
         if current_day >= 5: 
             return {
@@ -80,8 +80,14 @@ def analyze_market():
                 "history": trade_history[:10] if trade_history else []
             }
 
-        gold_ticker = yf.Ticker("GC=F")
+        # 🎯 অরিজিনাল স্পট গোল্ড লাইভ ডেটা (ম্যাচিংয়ের জন্য)
+        gold_ticker = yf.Ticker("XAUUSD=X")
         gold_data = gold_ticker.history(period="5d", interval="1m")
+        
+        # যদি কোনো কারণে স্পট ডেটা না পাওয়া যায়, তবে ফিউচার ডেটা নিবে (কিন্তু ফিক্সড মাইনাস করবে না)
+        if gold_data.empty or len(gold_data) < 50:
+            gold_ticker = yf.Ticker("GC=F")
+            gold_data = gold_ticker.history(period="5d", interval="1m")
         
         if not gold_data.empty and len(gold_data) >= 50:
             gold_data['EMA_20'] = ta.trend.ema_indicator(gold_data['Close'].squeeze(), window=20)
@@ -90,8 +96,9 @@ def analyze_market():
             gold_data['ATR'] = ta.volatility.average_true_range(gold_data['High'].squeeze(), gold_data['Low'].squeeze(), gold_data['Close'].squeeze(), window=14)
             
             last_gold = gold_data.iloc[-1]
-            raw_close = float(last_gold['Close'])
-            close = raw_close - 24.50  
+            
+            # 💡 এখানে ফিক্সড (- 24.50) মাইনাস করার লজিকটি মুছে একদম লাইভ অরিজিনাল প্রাইস বসানো হয়েছে
+            close = float(last_gold['Close'])  
             
             rsi = float(last_gold['RSI'])
             ema20 = float(last_gold['EMA_20'])
@@ -186,4 +193,3 @@ def get_signal():
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
-
