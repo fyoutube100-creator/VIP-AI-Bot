@@ -79,7 +79,6 @@
                 <span class="text-xs bg-gray-800 px-2 py-1 rounded text-gray-400 border border-gray-700" id="currentTime">--:--:--</span>
             </div>
 
-            <!-- 🥇 FOREX CARD (GOLD) -->
             <div class="bg-[#161b22] border border-blue-600/50 rounded-xl p-5 relative overflow-hidden mb-4 shadow-[0_0_15px_rgba(37,99,235,0.1)]">
                 <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-600 to-blue-400"></div>
                 <div class="flex justify-between items-start mb-4">
@@ -95,7 +94,6 @@
                 <p id="forex-msg" class="text-[10px] text-gray-400 mt-2 text-center"></p>
             </div>
 
-            <!-- 🥈 BINARY CARD (EUR/USD) -->
             <div class="bg-[#161b22] border border-purple-600/50 rounded-xl p-5 relative overflow-hidden mb-6 shadow-[0_0_15px_rgba(147,51,234,0.1)]">
                 <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-purple-600 to-purple-400"></div>
                 <div class="flex justify-between items-start mb-4">
@@ -164,6 +162,19 @@
         </div>
 
         <div id="dashboard" class="tab-content">
+            <!-- 🎯 BROKER PRICE SYNC (NEW VIP FEATURE) -->
+            <div class="bg-[#161b22] border border-yellow-600/50 rounded-xl p-5 shadow-lg mb-6 shadow-[0_0_15px_rgba(202,138,4,0.1)]">
+                <h2 class="font-bold text-lg mb-1 text-yellow-500 flex items-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                    Broker Price Sync
+                </h2>
+                <p class="text-[11px] text-gray-400 mb-4 leading-relaxed">আপনার TradingView বা Broker এর চার্টের সাথে বটের প্রাইস গ্যাপ থাকলে, আপনার বর্তমান লাইভ প্রাইসটি নিচে বসিয়ে Sync করুন।</p>
+                <div class="flex gap-2">
+                    <input type="number" step="0.01" id="tvPriceInput" class="w-full bg-[#0d1117] border border-gray-700 rounded-lg p-2.5 text-white font-bold focus:border-yellow-500 outline-none" placeholder="TradingView Live Price (e.g. 4123.70)">
+                    <button onclick="syncPrice()" class="bg-yellow-600 hover:bg-yellow-500 text-white font-bold px-4 rounded-lg transition text-sm whitespace-nowrap">Sync Now</button>
+                </div>
+            </div>
+
             <div class="bg-[#161b22] border border-gray-800 rounded-xl p-5 shadow-lg">
                 <h2 class="font-bold text-lg mb-1">Money Management</h2>
                 <p class="text-xs text-gray-400 mb-6">আপনার ডিপোজিট অনুযায়ী ট্রেডিং প্ল্যান তৈরি করুন।</p>
@@ -203,6 +214,30 @@
             walletInput.setSelectionRange(0, 99999);
             navigator.clipboard.writeText(walletInput.value).then(() => {
                 alert("ওয়ালেট এড্রেস কপি হয়েছে: " + walletInput.value);
+            });
+        }
+
+        // 🎯 Broker Sync Logic
+        function syncPrice() {
+            const tvPrice = document.getElementById('tvPriceInput').value;
+            if (!tvPrice) {
+                alert("অনুগ্রহ করে আপনার চার্টের বর্তমান লাইভ প্রাইস দিন!");
+                return;
+            }
+            fetch('/api/sync_price', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({tv_price: parseFloat(tvPrice)})
+            }).then(res => res.json()).then(data => {
+                if (data.status === 'success') {
+                    alert("✅ প্রাইস সফলভাবে সিংক হয়েছে! এখন আপনার চার্ট আর বটের সিগন্যাল একদম কাঁটায় কাঁটায় মিলে যাবে।");
+                    document.getElementById('tvPriceInput').value = '';
+                    fetchSignal(); 
+                } else {
+                    alert("Error: " + data.message);
+                }
+            }).catch(err => {
+                alert("Error connecting to server!");
             });
         }
 
