@@ -15,7 +15,7 @@ VIP_USERS = {
     "Fahim": "irfa",
     "vip1": "blackshoter",
     "boss": "gold99",
-    "FARD": "Fm6@"
+    "FARHAD": "Fm8"
 }
 
 trade_history = []
@@ -78,23 +78,11 @@ def analyze_market():
                 "history": trade_history[:10] if trade_history else []
             }
 
-        # 🎯 স্পট এবং ফিউচার দুটোরই ডেটা নেওয়া হচ্ছে
-        spot_data = yf.Ticker("XAUUSD=X").history(period="5d", interval="1m")
-        future_data = yf.Ticker("GC=F").history(period="5d", interval="1m")
+        # 🎯 শুধুমাত্র স্পট গোল্ডের লাইভ ডেটা নেওয়া হচ্ছে
+        gold_ticker = yf.Ticker("XAUUSD=X")
+        df = gold_ticker.history(period="5d", interval="1m")
         
-        # স্পট মার্কেটের একদম লাইভ রিয়েল প্রাইস বের করা হচ্ছে (TradingView এর সাথে ম্যাচ করার জন্য)
-        actual_spot_price = None
-        if not spot_data.empty:
-            actual_spot_price = float(spot_data['Close'].iloc[-1])
-        
-        # এনালাইসিসের জন্য ইন্ডিকেটর ডেটা সেট করা
-        df = None
-        if not spot_data.empty and len(spot_data) >= 50:
-            df = spot_data
-        elif not future_data.empty and len(future_data) >= 50:
-            df = future_data
-            
-        if df is not None:
+        if not df.empty and len(df) >= 50:
             df['EMA_20'] = ta.trend.ema_indicator(df['Close'].squeeze(), window=20)
             df['EMA_50'] = ta.trend.ema_indicator(df['Close'].squeeze(), window=50)
             df['RSI'] = ta.momentum.rsi(df['Close'].squeeze(), window=14)
@@ -102,8 +90,8 @@ def analyze_market():
             
             last_candle = df.iloc[-1]
             
-            # 💡 ম্যাজিক লজিক: ইন্ডিকেটর যেখান থেকেই আসুক, এন্ট্রি প্রাইস হবে সবসময় লাইভ স্পট প্রাইস!
-            close = actual_spot_price if actual_spot_price else float(last_candle['Close'])
+            # 💡 সরাসরি স্পট মার্কেটের রিয়েল-টাইম ক্লোজিং প্রাইস
+            close = float(last_candle['Close'])
             
             rsi = float(last_candle['RSI'])
             ema20 = float(last_candle['EMA_20'])
