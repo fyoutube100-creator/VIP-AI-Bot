@@ -1,13 +1,14 @@
 from flask import Flask, jsonify, send_from_directory, request
-import yfinance as yf
+# yfinance বাদ দিয়ে আমরা এখন tvDatafeed ব্যবহার করবো
+from tvDatafeed import TvDatafeed, Interval
 import ta
+import pandas as pd
 import os
 import traceback
 from datetime import datetime
 import urllib.request
 import json
 import time
-import requests
 
 app = Flask(__name__)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -23,11 +24,12 @@ VIP_USERS = {
 trade_history = []
 active_trade_forex = None
 
-# 🚀 API Caching System to prevent Yahoo Finance 429/401 bans
+# TradingView Datafeed Initialization (No login required for free data)
+tv = TvDatafeed()
+
 market_cache = {
     "time": 0,
     "spot": None,
-    "future": None,
     "eu": None
 }
 
@@ -69,16 +71,12 @@ def sync_price():
         data = request.get_json()
         tv_price = float(data.get('tv_price'))
         
-        session = requests.Session()
-        session.headers.update({"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"})
-        
-        spot_data = yf.Ticker("XAUUSD=X", session=session).history(period="1d", interval="1m")
-        if spot_data.empty:
-            spot_data = yf.Ticker("GC=F", session=session).history(period="1d", interval="1m")
+        # TradingView থেকে OANDA ব্রোকারের XAUUSD ডেটা নেওয়া হচ্ছে
+        spot_data = tv.get_hist(symbol='XAUUSD', exchange='OANDA', interval=Interval.in_1_minute, n_bars=10)
             
-        if not spot_data.empty:
-            yf_price = float(spot_data['Close'].iloc[-1])
-            offset = yf_price - tv_price
+        if spot_data is not None and not spot_data.empty:
+            tv_live_price = float(spot_data['close'].iloc[-1])
+            offset = tv_live_price - tv_price
             
             with open("offset.txt", "w") as f:
                 f.write(str(offset))
@@ -113,35 +111,26 @@ def submit_form():
         print("Telegram Error:", e)
         return jsonify({"status": "error"})
 
-def fetch_yahoo_data():
+def fetch_tradingview_data():
     global market_cache
     current_time = time.time()
     
-    # 💡 60 সেকেন্ড ক্যাশিং (Yahoo এর ব্যান এড়াতে)
     if current_time - market_cache["time"] < 60 and market_cache["spot"] is not None:
-        return market_cache["spot"], market_cache["future"], market_cache["eu"]
+        return market_cache["spot"], market_cache["eu"]
         
     try:
-        session = requests.Session()
-        # ব্রাউজার স্পুফিং
-        session.headers.update({
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36",
-            "Accept": "*/*"
-        })
-        
-        spot = yf.Ticker("XAUUSD=X", session=session).history(period="5d", interval="1m")
-        future = yf.Ticker("GC=F", session=session).history(period="5d", interval="1m")
-        eu = yf.Ticker("EURUSD=X", session=session).history(period="5d", interval="1m")
+        # TradingView থেকে ডাইরেক্ট ডেটা ফেচ (OANDA ব্রোকার)
+        spot = tv.get_hist(symbol='XAUUSD', exchange='OANDA', interval=Interval.in_1_minute, n_bars=100)
+        eu = tv.get_hist(symbol='EURUSD', exchange='OANDA', interval=Interval.in_1_minute, n_bars=100)
         
         market_cache["time"] = current_time
         market_cache["spot"] = spot
-        market_cache["future"] = future
         market_cache["eu"] = eu
         
-        return spot, future, eu
+        return spot, eu
     except Exception as e:
-        print("YF Fetch Error:", e)
-        return market_cache["spot"], market_cache["future"], market_cache["eu"]
+        print("TradingView Fetch Error:", e)
+        return market_cache["spot"], market_cache["eu"]
 
 def analyze_market():
     global active_trade_forex, trade_history
@@ -156,22 +145,21 @@ def analyze_market():
         return {"forex": forex_signal, "binary": binary_signal, "history": trade_history[:10]}
 
     try:
-        spot_data, future_data, eu_data = fetch_yahoo_data()
+        spot_data, eu_data = fetch_tradingview_data()
         
         df = None
         if spot_data is not None and not spot_data.empty and len(spot_data) >= 50:
             df = spot_data
-        elif future_data is not None and not future_data.empty and len(future_data) >= 50:
-            df = future_data
             
         if df is not None:
-            df['EMA_20'] = ta.trend.ema_indicator(df['Close'].squeeze(), window=20)
-            df['EMA_50'] = ta.trend.ema_indicator(df['Close'].squeeze(), window=50)
-            df['RSI'] = ta.momentum.rsi(df['Close'].squeeze(), window=14)
-            df['ATR'] = ta.volatility.average_true_range(df['High'].squeeze(), df['Low'].squeeze(), df['Close'].squeeze(), window=14)
+            # tvDatafeed কলামের নামগুলো ছোট হাতের হয় (close, high, low)
+            df['EMA_20'] = ta.trend.ema_indicator(df['close'].squeeze(), window=20)
+            df['EMA_50'] = ta.trend.ema_indicator(df['close'].squeeze(), window=50)
+            df['RSI'] = ta.momentum.rsi(df['close'].squeeze(), window=14)
+            df['ATR'] = ta.volatility.average_true_range(df['high'].squeeze(), df['low'].squeeze(), df['close'].squeeze(), window=14)
             
             last_candle = df.iloc[-1]
-            raw_close = float(last_candle['Close'])
+            raw_close = float(last_candle['close'])
             
             offset = get_offset()
             close = raw_close - offset
@@ -232,7 +220,7 @@ def analyze_market():
 
     try:
         if eu_data is not None and not eu_data.empty and len(eu_data) >= 14:
-            eu_data['RSI'] = ta.momentum.rsi(eu_data['Close'].squeeze(), window=14)
+            eu_data['RSI'] = ta.momentum.rsi(eu_data['close'].squeeze(), window=14)
             last_eu = eu_data.iloc[-1]
             eu_rsi = float(last_eu['RSI'])
             if eu_rsi < 30:
