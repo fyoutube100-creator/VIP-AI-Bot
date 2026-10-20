@@ -56,7 +56,6 @@
         <div id="home" class="tab-content">
             <div class="bg-[#161b22] border border-gray-800 rounded-xl p-1 shadow-lg overflow-hidden relative">
                 <p class="absolute top-4 left-4 z-10 text-xs bg-black/60 px-2 py-1 rounded text-white font-bold tracking-widest border border-gray-700">LIVE SATELLITE VIEW</p>
-                <!-- উইকিপিডিয়া সার্ভারের পারফেক্ট GIF (কখনও ব্লক হবে না) -->
                 <img src="https://upload.wikimedia.org/wikipedia/commons/2/2c/Rotating_earth_%28large%29.gif" class="w-full h-64 object-cover rounded-lg opacity-80 mix-blend-screen" alt="Satellite View">
                 <div class="p-4 text-center">
                     <h2 class="text-xl font-bold mb-2">Welcome to Black Shoter AI</h2>
@@ -72,32 +71,49 @@
                     <div class="w-2.5 h-2.5 bg-green-500 rounded-full animate-pulse"></div>
                     <h2 class="font-bold text-lg">Auto Analysis is Running</h2>
                 </div>
-                <p id="ai-message" class="text-sm text-gray-400">মার্কেট স্ক্যান করা হচ্ছে...</p>
+                <p class="text-sm text-gray-400">মার্কেট স্ক্যান করা হচ্ছে...</p>
             </div>
 
             <div class="flex justify-between items-center mb-2">
-                <h3 class="font-bold">Live Signal</h3>
+                <h3 class="font-bold text-lg">Live Signals</h3>
                 <span class="text-xs bg-gray-800 px-2 py-1 rounded text-gray-400 border border-gray-700" id="currentTime">--:--:--</span>
             </div>
 
-            <div class="bg-[#161b22] border border-blue-600/30 rounded-xl p-5 relative overflow-hidden mb-6">
+            <!-- 🥇 FOREX CARD (GOLD) -->
+            <div class="bg-[#161b22] border border-blue-600/50 rounded-xl p-5 relative overflow-hidden mb-4 shadow-[0_0_15px_rgba(37,99,235,0.1)]">
                 <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-600 to-blue-400"></div>
-                <div class="flex justify-between items-start mb-6">
+                <div class="flex justify-between items-start mb-4">
                     <div>
-                        <h2 id="asset-name" class="text-2xl font-extrabold uppercase tracking-wider mb-1">SCANNING...</h2>
-                        <p id="signal-type" class="text-xs text-blue-400 font-bold">WAITING SIGNAL</p>
+                        <h2 class="text-xl font-extrabold uppercase tracking-wider mb-1">GOLD (XAUUSD)</h2>
+                        <p class="text-xs text-blue-400 font-bold">FOREX SIGNAL</p>
                     </div>
-                    <div id="action-badge" class="px-3 py-1.5 bg-gray-800 text-gray-300 rounded font-bold text-sm border border-gray-700 transition-all duration-300">
+                    <div id="forex-badge" class="px-3 py-1.5 bg-gray-800 text-gray-300 rounded font-bold text-sm border border-gray-700 transition-all duration-300">
                         WAIT ⏳
                     </div>
                 </div>
-
-                <div class="space-y-4 border border-gray-800 rounded-lg p-4 bg-[#0d1117] mb-6" id="signal-details"></div>
-
-                <button onclick="fetchSignal()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-lg transition tracking-wide">
-                    Refresh Signal
-                </button>
+                <div class="space-y-3 border border-gray-800 rounded-lg p-4 bg-[#0d1117]" id="forex-details"></div>
+                <p id="forex-msg" class="text-[10px] text-gray-400 mt-2 text-center"></p>
             </div>
+
+            <!-- 🥈 BINARY CARD (EUR/USD) -->
+            <div class="bg-[#161b22] border border-purple-600/50 rounded-xl p-5 relative overflow-hidden mb-6 shadow-[0_0_15px_rgba(147,51,234,0.1)]">
+                <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-purple-600 to-purple-400"></div>
+                <div class="flex justify-between items-start mb-4">
+                    <div>
+                        <h2 class="text-xl font-extrabold uppercase tracking-wider mb-1">EUR/USD</h2>
+                        <p class="text-xs text-purple-400 font-bold">BINARY SIGNAL</p>
+                    </div>
+                    <div id="binary-badge" class="px-3 py-1.5 bg-gray-800 text-gray-300 rounded font-bold text-sm border border-gray-700 transition-all duration-300">
+                        WAIT ⏳
+                    </div>
+                </div>
+                <div class="space-y-3 border border-gray-800 rounded-lg p-4 bg-[#0d1117]" id="binary-details"></div>
+                <p id="binary-msg" class="text-[10px] text-gray-400 mt-2 text-center"></p>
+            </div>
+
+            <button onclick="fetchSignal()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-lg transition tracking-wide mb-6">
+                Refresh Signals
+            </button>
 
             <h3 class="font-bold mb-2">Today's Trade History</h3>
             <div class="bg-[#161b22] border border-gray-800 rounded-xl p-4 mb-8">
@@ -116,7 +132,6 @@
                         <p class="text-[10px] text-gray-400">সঠিক তথ্য দিয়ে ফর্মটি পূরণ করুন।</p>
                     </div>
                 </div>
-
                 <form id="aiForm" class="space-y-4" onsubmit="submitForm(event)">
                     <div>
                         <label class="text-xs font-bold text-gray-300">১. পেমেন্ট আইডি (Payment ID)</label>
@@ -238,35 +253,58 @@
             }
         }
 
-        let lastAction = "WAIT ⏳";
+        let lastForexAction = "WAIT ⏳";
+        let lastBinaryAction = "WAIT ⏳";
         function updateTime() { document.getElementById('currentTime').innerText = new Date().toLocaleTimeString(); }
         setInterval(updateTime, 1000);
 
+        function getBadgeClass(action) {
+            if(action.includes("BUY") || action.includes("UP")) return "px-3 py-1.5 bg-green-900/80 text-green-400 rounded font-bold text-sm border border-green-500 animate-pulse";
+            if(action.includes("SELL") || action.includes("DOWN")) return "px-3 py-1.5 bg-red-900/80 text-red-400 rounded font-bold text-sm border border-red-500 animate-pulse";
+            if(action.includes("WEEKEND")) return "px-3 py-1.5 bg-yellow-900/80 text-yellow-400 rounded font-bold text-sm border border-yellow-500";
+            return "px-3 py-1.5 bg-gray-800 text-gray-300 rounded font-bold text-sm border border-gray-700";
+        }
+
         function fetchSignal() {
             fetch('/api/get_signal').then(res => res.json()).then(data => {
-                document.getElementById('ai-message').innerText = data.message;
-                document.getElementById('asset-name').innerText = data.asset;
-                document.getElementById('signal-type').innerText = data.type ? (data.type + " SIGNAL") : "WAITING SIGNAL";
-                const badge = document.getElementById('action-badge');
-                badge.innerText = data.action;
-                
-                // 🛑 উইকেন্ড ব্যাজ স্টাইল যুক্ত করা হয়েছে
-                if(data.action.includes("BUY") || data.action.includes("UP")) badge.className = "px-3 py-1.5 bg-green-900/80 text-green-400 rounded font-bold text-sm border border-green-500 animate-pulse";
-                else if(data.action.includes("SELL") || data.action.includes("DOWN")) badge.className = "px-3 py-1.5 bg-red-900/80 text-red-400 rounded font-bold text-sm border border-red-500 animate-pulse";
-                else if(data.action.includes("WEEKEND")) badge.className = "px-3 py-1.5 bg-yellow-900/80 text-yellow-400 rounded font-bold text-sm border border-yellow-500";
-                else badge.className = "px-3 py-1.5 bg-gray-800 text-gray-300 rounded font-bold text-sm border border-gray-700";
+                const forex = data.forex;
+                const binary = data.binary;
 
-                if (data.action !== "WAIT ⏳" && data.action !== "WEEKEND ⏸️" && lastAction !== data.action) {
-                    document.getElementById('alertSound').play().catch(e => console.log("Audio play blocked"));
-                    try { if (Notification.permission === "granted") new Notification("🔥 VIP Signal Alert!", { body: `${data.asset} - ${data.action} Live!`, icon: "https://cdn-icons-png.flaticon.com/512/2950/2950150.png" }); } catch (error) {}
+                // 🥇 Forex Update
+                document.getElementById('forex-badge').className = getBadgeClass(forex.action);
+                document.getElementById('forex-badge').innerText = forex.action;
+                document.getElementById('forex-msg').innerText = forex.message;
+                const fxBox = document.getElementById('forex-details');
+                if (forex.action === "WAIT ⏳" || forex.action.includes("WEEKEND")) {
+                    fxBox.innerHTML = `<div class="flex justify-between items-center"><span class="text-xs text-gray-400 font-bold">STATUS:</span><span class="font-bold text-gray-500">${forex.status}</span></div>`;
+                } else {
+                    fxBox.innerHTML = `<div class="flex justify-between items-center"><span class="text-xs text-gray-400 font-bold">ENTRY:</span><span class="font-bold text-white">${forex.entry}</span></div><hr class="border-gray-800/50"><div class="flex justify-between items-center"><span class="text-xs text-green-500 font-bold">TP 1:</span><span class="font-bold text-green-400">${forex.tp1}</span></div><hr class="border-gray-800/50"><div class="flex justify-between items-center"><span class="text-xs text-green-500 font-bold">TP 2:</span><span class="font-bold text-green-400">${forex.tp2}</span></div><hr class="border-gray-800/50"><div class="flex justify-between items-center"><span class="text-xs text-red-500 font-bold">SL:</span><span class="font-bold text-red-400">${forex.sl}</span></div>`;
                 }
-                lastAction = data.action;
 
-                const detailsBox = document.getElementById('signal-details');
-                if(data.type === "FOREX") detailsBox.innerHTML = `<div class="flex justify-between items-center"><span class="text-xs text-gray-400 font-bold">ENTRY:</span><span class="font-bold text-white">${data.entry}</span></div><hr class="border-gray-800/50"><div class="flex justify-between items-center"><span class="text-xs text-green-500 font-bold">TP 1:</span><span class="font-bold text-green-400">${data.tp1}</span></div><hr class="border-gray-800/50"><div class="flex justify-between items-center"><span class="text-xs text-green-500 font-bold">TP 2:</span><span class="font-bold text-green-400">${data.tp2}</span></div><hr class="border-gray-800/50"><div class="flex justify-between items-center"><span class="text-xs text-red-500 font-bold">SL:</span><span class="font-bold text-red-400">${data.sl}</span></div>`;
-                else if (data.type === "BINARY") detailsBox.innerHTML = `<div class="flex justify-between items-center"><span class="text-xs text-gray-400 font-bold">TIMEFRAME:</span><span class="font-bold text-white">${data.timeframe}</span></div><hr class="border-gray-800/50"><div class="flex justify-between items-center"><span class="text-xs text-gray-400 font-bold">PAYOUT:</span><span class="font-bold text-white">${data.payout}</span></div><hr class="border-gray-800/50"><div class="flex justify-between items-center"><span class="text-xs text-blue-400 font-bold">STATUS:</span><span class="font-bold text-blue-400">${data.status}</span></div>`;
-                else detailsBox.innerHTML = `<div class="flex justify-between items-center"><span class="text-xs text-gray-400 font-bold">TIMEFRAME:</span><span class="font-bold text-gray-500">--</span></div><hr class="border-gray-800/50"><div class="flex justify-between items-center"><span class="text-xs text-gray-400 font-bold">PAYOUT:</span><span class="font-bold text-gray-500">--</span></div><hr class="border-gray-800/50"><div class="flex justify-between items-center"><span class="text-xs text-blue-400 font-bold">STATUS:</span><span class="font-bold text-gray-500">${data.status}</span></div>`;
+                // 🥈 Binary Update
+                document.getElementById('binary-badge').className = getBadgeClass(binary.action);
+                document.getElementById('binary-badge').innerText = binary.action;
+                document.getElementById('binary-msg').innerText = binary.message;
+                const binBox = document.getElementById('binary-details');
+                if (binary.action === "WAIT ⏳" || binary.action.includes("WEEKEND")) {
+                    binBox.innerHTML = `<div class="flex justify-between items-center"><span class="text-xs text-gray-400 font-bold">STATUS:</span><span class="font-bold text-gray-500">${binary.status}</span></div>`;
+                } else {
+                    binBox.innerHTML = `<div class="flex justify-between items-center"><span class="text-xs text-gray-400 font-bold">TIMEFRAME:</span><span class="font-bold text-white">${binary.timeframe}</span></div><hr class="border-gray-800/50"><div class="flex justify-between items-center"><span class="text-xs text-gray-400 font-bold">PAYOUT:</span><span class="font-bold text-white">${binary.payout}</span></div><hr class="border-gray-800/50"><div class="flex justify-between items-center"><span class="text-xs text-blue-400 font-bold">STATUS:</span><span class="font-bold text-blue-400">${binary.status}</span></div>`;
+                }
 
+                // Sound Alert Check
+                if ((forex.action.includes("BUY") || forex.action.includes("SELL")) && lastForexAction !== forex.action) {
+                    document.getElementById('alertSound').play().catch(e => console.log("Audio block"));
+                    try { if (Notification.permission === "granted") new Notification("🔥 Forex Signal Live!", { body: `GOLD - ${forex.action}` }); } catch(e){}
+                }
+                if ((binary.action.includes("UP") || binary.action.includes("DOWN")) && lastBinaryAction !== binary.action) {
+                    document.getElementById('alertSound').play().catch(e => console.log("Audio block"));
+                    try { if (Notification.permission === "granted") new Notification("🔥 Binary Signal Live!", { body: `EUR/USD - ${binary.action}` }); } catch(e){}
+                }
+                lastForexAction = forex.action;
+                lastBinaryAction = binary.action;
+
+                // History Update
                 const historyList = document.getElementById('history-list');
                 if(data.history && data.history.length > 0) {
                     historyList.innerHTML = "";
@@ -277,9 +315,12 @@
                         if(trade.result.includes("Running")) resultColor = "text-yellow-400";
                         historyList.innerHTML += `<div class="flex justify-between items-center bg-[#0d1117] p-3 rounded-lg border border-gray-800 shadow-sm"><div><p class="text-xs text-gray-500">${trade.time}</p><p class="font-bold text-sm">${trade.asset} <span class="text-xs ${trade.action.includes('BUY') ? 'text-green-500' : 'text-red-500'}">${trade.action}</span></p></div><div class="text-right"><p class="font-bold text-sm ${resultColor}">${trade.result}</p><p class="text-xs text-gray-500">Entry: ${trade.entry}</p></div></div>`;
                     });
-                } else historyList.innerHTML = '<p class="text-sm text-gray-500 text-center py-2">No history yet.</p>';
+                } else {
+                    historyList.innerHTML = '<p class="text-sm text-gray-500 text-center py-2">No history yet.</p>';
+                }
             }).catch(err => console.log(err));
         }
+        
         fetchSignal();
         setInterval(fetchSignal, 30000);
     </script>
