@@ -15,7 +15,7 @@ VIP_USERS = {
     "Fahim": "irfa",
     "vip1": "blackshoter",
     "boss": "gold99",
-    "Notused": "notused@"
+    "FARD": "Fm6@"
 }
 
 trade_history = []
@@ -69,7 +69,6 @@ def submit_form():
 def analyze_market():
     global active_trade, trade_history
     try:
-        # 🛑 উইকেন্ড (শনি ও রবি) চেক
         current_day = datetime.now().weekday()
         if current_day >= 5: 
             return {
@@ -79,35 +78,37 @@ def analyze_market():
                 "history": trade_history[:10] if trade_history else []
             }
 
-        is_futures = False
-        gold_ticker = yf.Ticker("XAUUSD=X")
-        gold_data = gold_ticker.history(period="5d", interval="1m")
+        # 🎯 স্পট এবং ফিউচার দুটোরই ডেটা নেওয়া হচ্ছে
+        spot_data = yf.Ticker("XAUUSD=X").history(period="5d", interval="1m")
+        future_data = yf.Ticker("GC=F").history(period="5d", interval="1m")
         
-        # স্পট ডেটা না পেলে ব্যাকআপ ফিউচার ডেটা কল করা হবে
-        if gold_data.empty or len(gold_data) < 50:
-            gold_ticker = yf.Ticker("GC=F")
-            gold_data = gold_ticker.history(period="5d", interval="1m")
-            is_futures = True
+        # স্পট মার্কেটের একদম লাইভ রিয়েল প্রাইস বের করা হচ্ছে (TradingView এর সাথে ম্যাচ করার জন্য)
+        actual_spot_price = None
+        if not spot_data.empty:
+            actual_spot_price = float(spot_data['Close'].iloc[-1])
         
-        if not gold_data.empty and len(gold_data) >= 50:
-            gold_data['EMA_20'] = ta.trend.ema_indicator(gold_data['Close'].squeeze(), window=20)
-            gold_data['EMA_50'] = ta.trend.ema_indicator(gold_data['Close'].squeeze(), window=50)
-            gold_data['RSI'] = ta.momentum.rsi(gold_data['Close'].squeeze(), window=14)
-            gold_data['ATR'] = ta.volatility.average_true_range(gold_data['High'].squeeze(), gold_data['Low'].squeeze(), gold_data['Close'].squeeze(), window=14)
+        # এনালাইসিসের জন্য ইন্ডিকেটর ডেটা সেট করা
+        df = None
+        if not spot_data.empty and len(spot_data) >= 50:
+            df = spot_data
+        elif not future_data.empty and len(future_data) >= 50:
+            df = future_data
             
-            last_gold = gold_data.iloc[-1]
-            raw_close = float(last_gold['Close'])
+        if df is not None:
+            df['EMA_20'] = ta.trend.ema_indicator(df['Close'].squeeze(), window=20)
+            df['EMA_50'] = ta.trend.ema_indicator(df['Close'].squeeze(), window=50)
+            df['RSI'] = ta.momentum.rsi(df['Close'].squeeze(), window=14)
+            df['ATR'] = ta.volatility.average_true_range(df['High'].squeeze(), df['Low'].squeeze(), df['Close'].squeeze(), window=14)
             
-            # 💡 স্মার্ট প্রাইস ম্যাচিং লজিক: ফিউচার ডেটা নিলে অটোমেটিক ২২.৩১ মাইনাস করবে
-            if is_futures:
-                close = raw_close - 22.31
-            else:
-                close = raw_close
+            last_candle = df.iloc[-1]
             
-            rsi = float(last_gold['RSI'])
-            ema20 = float(last_gold['EMA_20'])
-            ema50 = float(last_gold['EMA_50'])
-            atr = float(last_gold['ATR'])
+            # 💡 ম্যাজিক লজিক: ইন্ডিকেটর যেখান থেকেই আসুক, এন্ট্রি প্রাইস হবে সবসময় লাইভ স্পট প্রাইস!
+            close = actual_spot_price if actual_spot_price else float(last_candle['Close'])
+            
+            rsi = float(last_candle['RSI'])
+            ema20 = float(last_candle['EMA_20'])
+            ema50 = float(last_candle['EMA_50'])
+            atr = float(last_candle['ATR'])
             
             if active_trade and active_trade['asset'] == "GOLD (XAUUSD)":
                 if active_trade['action'] == 'BUY 🟢':
