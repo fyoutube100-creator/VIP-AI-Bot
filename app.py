@@ -15,7 +15,7 @@ VIP_USERS = {
     "Fahim": "irfa",
     "vip1": "blackshoter",
     "boss": "gold99",
-    "NOUSE": "NOTUSE@"
+    "Notused": "notused@"
 }
 
 trade_history = []
@@ -47,7 +47,6 @@ def login_api():
 def submit_form():
     try:
         data = request.get_json()
-        # টেলিগ্রাম টোকেন সিকিউর রাখা হয়েছে
         botToken = os.environ.get('TELEGRAM_BOT_TOKEN')
         chatId = "7204862590"
         message = data.get('message')
@@ -80,14 +79,15 @@ def analyze_market():
                 "history": trade_history[:10] if trade_history else []
             }
 
-        # 🎯 অরিজিনাল স্পট গোল্ড লাইভ ডেটা (ম্যাচিংয়ের জন্য)
+        is_futures = False
         gold_ticker = yf.Ticker("XAUUSD=X")
         gold_data = gold_ticker.history(period="5d", interval="1m")
         
-        # যদি কোনো কারণে স্পট ডেটা না পাওয়া যায়, তবে ফিউচার ডেটা নিবে (কিন্তু ফিক্সড মাইনাস করবে না)
+        # স্পট ডেটা না পেলে ব্যাকআপ ফিউচার ডেটা কল করা হবে
         if gold_data.empty or len(gold_data) < 50:
             gold_ticker = yf.Ticker("GC=F")
             gold_data = gold_ticker.history(period="5d", interval="1m")
+            is_futures = True
         
         if not gold_data.empty and len(gold_data) >= 50:
             gold_data['EMA_20'] = ta.trend.ema_indicator(gold_data['Close'].squeeze(), window=20)
@@ -96,9 +96,13 @@ def analyze_market():
             gold_data['ATR'] = ta.volatility.average_true_range(gold_data['High'].squeeze(), gold_data['Low'].squeeze(), gold_data['Close'].squeeze(), window=14)
             
             last_gold = gold_data.iloc[-1]
+            raw_close = float(last_gold['Close'])
             
-            # 💡 এখানে ফিক্সড (- 24.50) মাইনাস করার লজিকটি মুছে একদম লাইভ অরিজিনাল প্রাইস বসানো হয়েছে
-            close = float(last_gold['Close'])  
+            # 💡 স্মার্ট প্রাইস ম্যাচিং লজিক: ফিউচার ডেটা নিলে অটোমেটিক ২২.৩১ মাইনাস করবে
+            if is_futures:
+                close = raw_close - 22.31
+            else:
+                close = raw_close
             
             rsi = float(last_gold['RSI'])
             ema20 = float(last_gold['EMA_20'])
