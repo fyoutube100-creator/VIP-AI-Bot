@@ -1,5 +1,4 @@
 from flask import Flask, jsonify, send_from_directory, request
-# yfinance বাদ দিয়ে আমরা এখন tvDatafeed ব্যবহার করবো
 from tvDatafeed import TvDatafeed, Interval
 import ta
 import pandas as pd
@@ -15,16 +14,13 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # 🔒 VIP মেম্বারদের আইডি ও পাসওয়ার্ড
 VIP_USERS = {
-    "Fahim": "irfa",
+    "Fahim": "fahim",
     "vip1": "blackshoter",
     "boss": "gold99",
-    "FA": "F"
+    "FD": "F@"
 }
 
-trade_history = []
-active_trade_forex = None
-
-# TradingView Datafeed Initialization (No login required for free data)
+# TradingView Datafeed
 tv = TvDatafeed()
 
 market_cache = {
@@ -41,6 +37,20 @@ def get_offset():
     except:
         pass
     return 0.0
+
+# 🚀 পারমানেন্ট ফাইল সেভ সিস্টেম 
+def load_state():
+    try:
+        if os.path.exists('state.json'):
+            with open('state.json', 'r') as f:
+                return json.load(f)
+    except:
+        pass
+    return {"active_trade_forex": None, "trade_history": []}
+
+def save_state(state):
+    with open('state.json', 'w') as f:
+        json.dump(state, f)
 
 @app.route('/')
 def home():
@@ -66,12 +76,10 @@ def login_api():
 
 @app.route('/api/sync_price', methods=['POST'])
 def sync_price():
-    global active_trade_forex
     try:
         data = request.get_json()
         tv_price = float(data.get('tv_price'))
         
-        # TradingView থেকে OANDA ব্রোকারের XAUUSD ডেটা নেওয়া হচ্ছে
         spot_data = tv.get_hist(symbol='XAUUSD', exchange='OANDA', interval=Interval.in_1_minute, n_bars=10)
             
         if spot_data is not None and not spot_data.empty:
@@ -81,7 +89,6 @@ def sync_price():
             with open("offset.txt", "w") as f:
                 f.write(str(offset))
                 
-            active_trade_forex = None
             return jsonify({"status": "success", "message": "Price Synced Successfully!"})
         else:
             return jsonify({"status": "error", "message": "Failed to fetch live data from Server."})
@@ -119,7 +126,6 @@ def fetch_tradingview_data():
         return market_cache["spot"], market_cache["eu"]
         
     try:
-        # TradingView থেকে ডাইরেক্ট ডেটা ফেচ (OANDA ব্রোকার)
         spot = tv.get_hist(symbol='XAUUSD', exchange='OANDA', interval=Interval.in_1_minute, n_bars=100)
         eu = tv.get_hist(symbol='EURUSD', exchange='OANDA', interval=Interval.in_1_minute, n_bars=100)
         
@@ -129,11 +135,12 @@ def fetch_tradingview_data():
         
         return spot, eu
     except Exception as e:
-        print("TradingView Fetch Error:", e)
         return market_cache["spot"], market_cache["eu"]
 
 def analyze_market():
-    global active_trade_forex, trade_history
+    state = load_state()
+    active_trade_forex = state.get("active_trade_forex")
+    trade_history = state.get("trade_history", [])
     
     forex_signal = {"asset": "GOLD (XAUUSD)", "type": "FOREX", "action": "WAIT ⏳", "entry": "--", "tp1": "--", "tp2": "--", "sl": "--", "status": "Analyzing...", "message": "উপযুক্ত এন্ট্রির জন্য অপেক্ষা করছে..."}
     binary_signal = {"asset": "EUR/USD", "type": "BINARY", "action": "WAIT ⏳", "timeframe": "--", "payout": "--", "status": "Analyzing...", "message": "মার্কেট স্ক্যান করা হচ্ছে..."}
@@ -142,33 +149,28 @@ def analyze_market():
     if current_day >= 5: 
         forex_signal.update({"action": "WEEKEND ⏸️", "status": "Market Offline", "message": "আজ উইকেন্ড! ফরেক্স মার্কেট বন্ধ রয়েছে।"})
         binary_signal.update({"action": "WEEKEND ⏸️", "status": "Market Offline", "message": "আজ উইকেন্ড! OTC অফ।"})
-        return {"forex": forex_signal, "binary": binary_signal, "history": trade_history[:10]}
+        return jsonify({"forex": forex_signal, "binary": binary_signal, "history": trade_history[:10]})
 
     try:
         spot_data, eu_data = fetch_tradingview_data()
         
-        df = None
         if spot_data is not None and not spot_data.empty and len(spot_data) >= 50:
-            df = spot_data
+            spot_data['EMA_20'] = ta.trend.ema_indicator(spot_data['close'].squeeze(), window=20)
+            spot_data['EMA_50'] = ta.trend.ema_indicator(spot_data['close'].squeeze(), window=50)
+            spot_data['RSI'] = ta.momentum.rsi(spot_data['close'].squeeze(), window=14)
+            spot_data['ATR'] = ta.volatility.average_true_range(spot_data['high'].squeeze(), spot_data['low'].squeeze(), spot_data['close'].squeeze(), window=14)
             
-        if df is not None:
-            # tvDatafeed কলামের নামগুলো ছোট হাতের হয় (close, high, low)
-            df['EMA_20'] = ta.trend.ema_indicator(df['close'].squeeze(), window=20)
-            df['EMA_50'] = ta.trend.ema_indicator(df['close'].squeeze(), window=50)
-            df['RSI'] = ta.momentum.rsi(df['close'].squeeze(), window=14)
-            df['ATR'] = ta.volatility.average_true_range(df['high'].squeeze(), df['low'].squeeze(), df['close'].squeeze(), window=14)
-            
-            last_candle = df.iloc[-1]
+            last_candle = spot_data.iloc[-1]
             raw_close = float(last_candle['close'])
             
-            offset = get_offset()
-            close = raw_close - offset
+            close = raw_close - get_offset()
             
             rsi = float(last_candle['RSI'])
             ema20 = float(last_candle['EMA_20'])
             ema50 = float(last_candle['EMA_50'])
             atr = float(last_candle['ATR'])
             
+            # 🎯 ফলাফল চেক করার লজিক
             if active_trade_forex:
                 if active_trade_forex['action'] == 'BUY 🟢':
                     if close >= active_trade_forex['tp1_val']:
@@ -189,19 +191,20 @@ def analyze_market():
                         trade_history.insert(0, active_trade_forex)
                         active_trade_forex = None
 
-            if active_trade_forex == None:
+            # 🎯 নতুন সিগন্যাল জেনারেট লজিক (ATR ৪ গুণ এবং ৬ গুণ করা হয়েছে)
+            if active_trade_forex is None:
                 if ema20 > ema50 and 40 < rsi < 70:
                     active_trade_forex = {
                         "time": datetime.now().strftime("%I:%M %p"),
                         "asset": "GOLD (XAUUSD)", "type": "FOREX", "action": "BUY 🟢",
-                        "entry": close, "tp1_val": close + (atr * 3), "tp2_val": close + (atr * 5), "sl_val": close - (atr * 3),
+                        "entry": close, "tp1_val": close + (atr * 4.0), "tp2_val": close + (atr * 6.0), "sl_val": close - (atr * 4.0),
                         "result": "Running ⏳"
                     }
                 elif ema20 < ema50 and 30 < rsi < 60:
                     active_trade_forex = {
                         "time": datetime.now().strftime("%I:%M %p"),
                         "asset": "GOLD (XAUUSD)", "type": "FOREX", "action": "SELL 🔴",
-                        "entry": close, "tp1_val": close - (atr * 3), "tp2_val": close - (atr * 5), "sl_val": close + (atr * 3),
+                        "entry": close, "tp1_val": close - (atr * 4.0), "tp2_val": close - (atr * 6.0), "sl_val": close + (atr * 4.0),
                         "result": "Running ⏳"
                     }
 
@@ -229,6 +232,11 @@ def analyze_market():
                 binary_signal.update({"action": "DOWN 🔴", "timeframe": "1 Minute", "payout": "80%+", "status": "Signal Active", "message": "Overbought Zone! 1 Min Reversal Expected."})
     except Exception as e:
         print("Binary AI Error:", e)
+
+    # 💾 বর্তমান স্ট্যাটাস ফাইলে সেভ করা হচ্ছে
+    state['active_trade_forex'] = active_trade_forex
+    state['trade_history'] = trade_history[:10]
+    save_state(state)
 
     return jsonify({"forex": forex_signal, "binary": binary_signal, "history": trade_history[:10]})
 
