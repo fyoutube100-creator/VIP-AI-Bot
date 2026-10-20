@@ -15,11 +15,12 @@ VIP_USERS = {
     "Fahim": "irfa",
     "vip1": "blackshoter",
     "boss": "gold99",
-    "FAR": "Fm"
+    "FD": "Fm8"
 }
 
 trade_history = []
 active_trade_forex = None
+price_offset = 0.0  # 🎯 ব্রোকার প্রাইস অ্যাডজাস্ট করার জন্য
 
 @app.route('/')
 def home():
@@ -42,6 +43,26 @@ def login_api():
         return jsonify({"status": "success"})
     else:
         return jsonify({"status": "error", "message": "ভুল আইডি বা পাসওয়ার্ড!"})
+
+@app.route('/api/sync_price', methods=['POST'])
+def sync_price():
+    global price_offset
+    try:
+        data = request.get_json()
+        tv_price = float(data.get('tv_price'))
+        
+        spot_data = yf.Ticker("XAUUSD=X").history(period="1d", interval="1m")
+        if spot_data.empty:
+            spot_data = yf.Ticker("GC=F").history(period="1d", interval="1m")
+            
+        if not spot_data.empty:
+            yf_price = float(spot_data['Close'].iloc[-1])
+            price_offset = yf_price - tv_price
+            return jsonify({"status": "success", "message": "Price Synced Successfully!"})
+        else:
+            return jsonify({"status": "error", "message": "Failed to fetch live data."})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)})
 
 @app.route('/api/submit_form', methods=['POST'])
 def submit_form():
@@ -67,12 +88,11 @@ def submit_form():
         return jsonify({"status": "error"})
 
 def analyze_market():
-    global active_trade_forex, trade_history
+    global active_trade_forex, trade_history, price_offset
     
     forex_signal = {"asset": "GOLD (XAUUSD)", "type": "FOREX", "action": "WAIT ⏳", "entry": "--", "tp1": "--", "tp2": "--", "sl": "--", "status": "Analyzing...", "message": "উপযুক্ত এন্ট্রির জন্য অপেক্ষা করছে..."}
     binary_signal = {"asset": "EUR/USD", "type": "BINARY", "action": "WAIT ⏳", "timeframe": "--", "payout": "--", "status": "Analyzing...", "message": "মার্কেট স্ক্যান করা হচ্ছে..."}
 
-    # 🛑 উইকেন্ড চেক
     current_day = datetime.now().weekday()
     if current_day >= 5: 
         forex_signal.update({"action": "WEEKEND ⏸️", "status": "Market Offline", "message": "আজ উইকেন্ড! ফরেক্স মার্কেট বন্ধ রয়েছে।"})
@@ -84,10 +104,6 @@ def analyze_market():
         spot_data = yf.Ticker("XAUUSD=X").history(period="5d", interval="1m")
         future_data = yf.Ticker("GC=F").history(period="5d", interval="1m")
         
-        actual_spot_price = None
-        if not spot_data.empty:
-            actual_spot_price = float(spot_data['Close'].iloc[-1])
-            
         df = None
         if not spot_data.empty and len(spot_data) >= 50:
             df = spot_data
@@ -101,8 +117,10 @@ def analyze_market():
             df['ATR'] = ta.volatility.average_true_range(df['High'].squeeze(), df['Low'].squeeze(), df['Close'].squeeze(), window=14)
             
             last_candle = df.iloc[-1]
-            # TradingView স্পট প্রাইস সিংক লজিক
-            close = actual_spot_price if actual_spot_price else float(last_candle['Close'])
+            raw_close = float(last_candle['Close'])
+            
+            # 💡 ম্যাজিক লজিক: আপনার ট্রেডিং ভিউয়ের প্রাইসের সাথে অটোমেটিক অ্যাডজাস্টমেন্ট
+            close = raw_close - price_offset
             
             rsi = float(last_candle['RSI'])
             ema20 = float(last_candle['EMA_20'])
