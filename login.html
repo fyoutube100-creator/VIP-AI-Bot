@@ -3,90 +3,103 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VIP Login - Black Shoter Premium</title>
+    <title>VIP Login - Black Shoter AI</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        body { background-color: #0d1117; color: white; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        .glass-panel { background: #161b22; border: 1px solid #30363d; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5); }
-    </style>
 </head>
-<body class="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
-    
-    <div class="absolute top-1/4 left-1/4 w-64 h-64 bg-yellow-600 rounded-full mix-blend-multiply filter blur-[100px] opacity-20"></div>
-    <div class="absolute bottom-1/4 right-1/4 w-64 h-64 bg-yellow-600 rounded-full mix-blend-multiply filter blur-[100px] opacity-10"></div>
+<body class="bg-[#0b0e14] text-white flex items-center justify-center min-h-screen">
 
-    <div class="w-full max-w-sm glass-panel rounded-2xl p-8 z-10 relative">
-        <div class="text-center mb-8">
-            <div class="w-16 h-16 mx-auto bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-2xl flex justify-center items-center font-extrabold text-3xl text-black shadow-[0_0_15px_rgba(234,179,8,0.4)] mb-4 border border-yellow-300">B</div>
-            <h1 class="text-2xl font-bold text-white mb-1 tracking-wide">Black Shoter Premium</h1>
-            <p class="text-sm text-yellow-500 font-semibold">VIP Member Login</p>
+    <div class="bg-[#161b22] border border-gray-800 p-8 rounded-xl shadow-2xl w-full max-w-md">
+        <div class="flex justify-center mb-6">
+            <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-700 rounded-lg text-white flex items-center justify-center font-black italic text-2xl shadow-[0_0_15px_rgba(59,130,246,0.5)]">B</div>
         </div>
+        <h2 class="text-2xl font-bold text-center mb-2">Black Shoter AI</h2>
+        <p class="text-xs text-gray-400 text-center mb-8">Secure 2-Step Verification Login</p>
 
-        <form id="loginForm">
-            <div class="mb-5">
-                <label class="block text-xs text-gray-400 uppercase tracking-wider mb-2 font-semibold">VIP ID / Username</label>
-                <!-- আইডির ইনপুট -->
-                <input type="text" id="username" class="w-full bg-[#0d1117] border border-gray-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 transition" placeholder="Enter your ID">
+        <form id="loginForm" class="space-y-4">
+            <div>
+                <label class="text-xs font-bold text-gray-400">Username</label>
+                <input type="text" id="username" required class="w-full mt-1 bg-[#0d1117] border border-gray-700 rounded-lg p-3 text-white focus:border-blue-500 outline-none" placeholder="Enter VIP ID">
             </div>
-            
-            <div class="mb-6">
-                <label class="block text-xs text-gray-400 uppercase tracking-wider mb-2 font-semibold">Password</label>
-                <!-- পাসওয়ার্ডের ইনপুট -->
-                <input type="password" id="password" class="w-full bg-[#0d1117] border border-gray-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 transition" placeholder="••••••••">
+            <div>
+                <label class="text-xs font-bold text-gray-400">Password</label>
+                <input type="password" id="password" required class="w-full mt-1 bg-[#0d1117] border border-gray-700 rounded-lg p-3 text-white focus:border-blue-500 outline-none" placeholder="Enter Password">
             </div>
-
-            <!-- ভুল পাসওয়ার্ড দিলে এই লাল মেসেজটি দেখাবে -->
-            <p id="error-msg" class="text-red-500 text-sm text-center mb-4 hidden font-bold"></p>
-
-            <button type="button" onclick="checkLogin()" class="w-full bg-gradient-to-r from-yellow-600 to-yellow-500 hover:from-yellow-500 hover:to-yellow-400 text-black font-bold py-3 px-4 rounded-lg transition shadow-lg shadow-yellow-600/30 tracking-wider">
-                LOGIN TO DASHBOARD
-            </button>
+            <button type="submit" id="loginBtn" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-lg transition mt-4 shadow-lg shadow-blue-500/20">Login to Dashboard</button>
         </form>
 
-        <p class="text-center text-xs text-gray-500 mt-6 flex items-center justify-center gap-1">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
-            End-to-End Encrypted
-        </p>
+        <div id="msgBox" class="mt-4 text-center text-sm hidden font-bold p-3 rounded-lg border"></div>
     </div>
 
-    <!-- সিকিউরিটি জাভাস্ক্রিপ্ট -->
     <script>
-        function checkLogin() {
-            const user = document.getElementById('username').value;
-            const pass = document.getElementById('password').value;
-            const errorMsg = document.getElementById('error-msg');
-
-            // ফাঁকা রাখলে ওয়ার্নিং দিবে
-            if(user === "" || pass === "") {
-                errorMsg.innerText = "আইডি এবং পাসওয়ার্ড দিতে হবে!";
-                errorMsg.classList.remove('hidden');
-                return;
+        // 🔒 Device ID Generator (পারমানেন্ট ব্রাউজার মেমোরি)
+        function getDeviceId() {
+            let deviceId = localStorage.getItem('device_id');
+            if (!deviceId) {
+                deviceId = 'DEV-' + Math.random().toString(36).substr(2, 9) + '-' + Date.now();
+                localStorage.setItem('device_id', deviceId);
             }
+            return deviceId;
+        }
 
-            errorMsg.classList.add('hidden');
-            
-            // ব্যাকএন্ডে (পাইথন) পাসওয়ার্ড চেক করতে পাঠাচ্ছে
+        // 📱 Device Name Identifier
+        function getDeviceName() {
+            let ua = navigator.userAgent;
+            if (ua.includes("Mobile") || ua.includes("Android") || ua.includes("iPhone")) {
+                return "Mobile Phone (" + navigator.platform + ")";
+            }
+            return "Desktop PC/Laptop (" + navigator.platform + ")";
+        }
+
+        // 🚀 Auto Login Check (যদি এপ্রুভড থাকে, সরাসরি ড্যাশবোর্ডে যাবে)
+        window.onload = function() {
+            if (localStorage.getItem('is_logged_in') === 'true') {
+                window.location.href = '/bot.html';
+            }
+        }
+
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const btn = document.getElementById('loginBtn');
+            const msgBox = document.getElementById('msgBox');
+            btn.innerText = "Verifying...";
+            btn.disabled = true;
+
+            const u = document.getElementById('username').value;
+            const p = document.getElementById('password').value;
+            const d_id = getDeviceId();
+            const d_name = getDeviceName();
+
             fetch('/api/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username: user, password: pass })
+                body: JSON.stringify({ username: u, password: p, device_id: d_id, device_name: d_name })
             })
             .then(res => res.json())
             .then(data => {
-                if(data.status === "success") {
-                    // পাসওয়ার্ড সঠিক হলে ড্যাশবোর্ডে যাবে
-                    window.location.href = "/bot.html";
+                msgBox.classList.remove('hidden', 'bg-red-900/50', 'text-red-400', 'border-red-500', 'bg-yellow-900/50', 'text-yellow-400', 'border-yellow-500');
+                
+                if (data.status === 'success') {
+                    localStorage.setItem('is_logged_in', 'true');
+                    window.location.href = '/bot.html';
+                } else if (data.status === 'pending') {
+                    msgBox.classList.add('bg-yellow-900/50', 'text-yellow-400', 'border-yellow-500');
+                    msgBox.innerText = data.message;
+                    btn.innerText = "Check Approval & Login";
+                    btn.disabled = false;
                 } else {
-                    // ভুল হলে লাল এরর দেখাবে
-                    errorMsg.innerText = data.message;
-                    errorMsg.classList.remove('hidden');
+                    msgBox.classList.add('bg-red-900/50', 'text-red-400', 'border-red-500');
+                    msgBox.innerText = data.message;
+                    btn.innerText = "Login to Dashboard";
+                    btn.disabled = false;
                 }
             })
             .catch(err => {
-                errorMsg.innerText = "Network Error!";
-                errorMsg.classList.remove('hidden');
+                msgBox.classList.remove('hidden');
+                msgBox.innerText = "Server error!";
+                btn.innerText = "Login to Dashboard";
+                btn.disabled = false;
             });
-        }
+        });
     </script>
 </body>
 </html>
