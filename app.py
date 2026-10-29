@@ -71,7 +71,6 @@ def save_devices(data):
     with open('devices.json', 'w') as f: json.dump(data, f)
 
 def get_bd_time():
-    # বাংলাদেশ সময় (UTC +6)
     return datetime.utcnow() + timedelta(hours=6)
 
 @app.route('/')
@@ -129,6 +128,28 @@ def sync_price():
         return jsonify({"status": "error", "message": "Failed."})
     except Exception as e: return jsonify({"status": "error", "message": str(e)})
 
+# 🚀 ফিক্সড করা ফর্ম সাবমিট API
+@app.route('/api/submit_form', methods=['POST'])
+def submit_form():
+    try:
+        data = request.get_json()
+        botToken = os.environ.get('TELEGRAM_BOT_TOKEN')
+        chatId = "7204862590"
+        msg = data.get('message', 'No message provided.')
+        
+        if botToken:
+            url = f"https://api.telegram.org/bot{botToken}/sendMessage"
+            req = urllib.request.Request(
+                url, 
+                data=json.dumps({'chat_id': chatId, 'text': msg, 'parse_mode': 'Markdown'}).encode('utf-8'), 
+                headers={'Content-Type': 'application/json'}
+            )
+            urllib.request.urlopen(req)
+        return jsonify({"status": "success"})
+    except Exception as e:
+        print("Telegram API Error:", e)
+        return jsonify({"status": "error", "message": str(e)})
+
 def fetch_tradingview_data():
     global market_cache
     if time.time() - market_cache["time"] < 60 and market_cache["spot"] is not None: return market_cache["spot"], market_cache["eu"]
@@ -158,7 +179,7 @@ def analyze_market():
     try:
         spot_data, eu_data = fetch_tradingview_data()
         
-        # 🚀 Forex Logic (Unchanged)
+        # Forex Logic 
         if spot_data is not None and not spot_data.empty and len(spot_data) >= 200:
             spot_data['EMA_20'] = ta.trend.ema_indicator(spot_data['close'].squeeze(), window=20)
             spot_data['EMA_50'] = ta.trend.ema_indicator(spot_data['close'].squeeze(), window=50)
@@ -186,10 +207,8 @@ def analyze_market():
             if active_trade_forex:
                 forex_signal.update({"action": active_trade_forex['action'], "entry": f"{active_trade_forex['entry']:.2f}", "tp1": f"{active_trade_forex['tp1_val']:.2f}", "tp2": f"{active_trade_forex['tp2_val']:.2f}", "sl": f"{active_trade_forex['sl_val']:.2f}", "status": "Running...", "message": "AI Confirmed: Trade is Currently Running."})
         
-        # 🚀 Binary Setup (Advance Logic & Result Track)
+        # Binary Logic
         if eu_data is not None and not eu_data.empty and len(eu_data) >= 20:
-            
-            # Check Binary Result
             if active_trade_binary:
                 try:
                     entry_dt = datetime.strptime(active_trade_binary['entry_time_full'], "%Y-%m-%d %H:%M:%S")
@@ -217,7 +236,6 @@ def analyze_market():
                         active_trade_binary = None
                 except Exception as e: print("Bin Result Error:", e); active_trade_binary = None
                     
-            # Generate New Binary Signal
             if active_trade_binary is None:
                 eu_data['RSI'] = ta.momentum.rsi(eu_data['close'].squeeze(), window=14)
                 indicator_bb = ta.volatility.BollingerBands(close=eu_data['close'].squeeze(), window=20, window_dev=2)
