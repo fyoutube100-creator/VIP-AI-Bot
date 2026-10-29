@@ -17,7 +17,7 @@ VIP_USERS = {
     "Fahim": "fahim",
     "vip1": "blackshoter",
     "boss": "gold99",
-    "farhad: "0001"
+    "bsfxbd: "Asdf1234"
 }
 
 tv = TvDatafeed()
