@@ -4,7 +4,7 @@ import ta
 import pandas as pd
 import os
 import traceback
-from datetime import datetime
+from datetime import datetime, timedelta
 import urllib.request
 import json
 import time
@@ -12,7 +12,6 @@ import time
 app = Flask(__name__)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-# 🔒 VIP মেম্বারদের আইডি ও পাসওয়ার্ড
 VIP_USERS = {
     "admin": "12345",
     "Fahim": "fahim",
@@ -51,9 +50,11 @@ def load_state():
     try:
         if os.path.exists('state.json'):
             with open('state.json', 'r') as f:
-                return json.load(f)
+                data = json.load(f)
+                if "active_trade_binary" not in data: data["active_trade_binary"] = None
+                return data
     except: pass
-    return {"active_trade_forex": None, "trade_history": []}
+    return {"active_trade_forex": None, "active_trade_binary": None, "trade_history": []}
 
 def save_state(state):
     with open('state.json', 'w') as f:
@@ -62,26 +63,25 @@ def save_state(state):
 def load_devices():
     try:
         if os.path.exists('devices.json'):
-            with open('devices.json', 'r') as f:
-                return json.load(f)
+            with open('devices.json', 'r') as f: return json.load(f)
     except: pass
     return {}
 
 def save_devices(data):
-    with open('devices.json', 'w') as f:
-        json.dump(data, f)
+    with open('devices.json', 'w') as f: json.dump(data, f)
+
+def get_bd_time():
+    # বাংলাদেশ সময় (UTC +6)
+    return datetime.utcnow() + timedelta(hours=6)
 
 @app.route('/')
-def home():
-    return send_from_directory(BASE_DIR, 'login.html')
+def home(): return send_from_directory(BASE_DIR, 'login.html')
 
 @app.route('/bot.html')
-def bot_dashboard():
-    return send_from_directory(BASE_DIR, 'bot.html')
+def bot_dashboard(): return send_from_directory(BASE_DIR, 'bot.html')
 
 @app.route('/login.html')
-def login_page():
-    return send_from_directory(BASE_DIR, 'login.html')
+def login_page(): return send_from_directory(BASE_DIR, 'login.html')
 
 @app.route('/api/login', methods=['POST'])
 def login_api():
@@ -97,27 +97,17 @@ def login_api():
             return jsonify({"status": "success"})
 
         if device_id not in devices or devices[device_id]['status'] != 'pending':
-            devices[device_id] = {
-                'username': username,
-                'device_name': device_name,
-                'status': 'pending',
-                'time': datetime.now().strftime("%Y-%m-%d %I:%M %p")
-            }
+            devices[device_id] = {'username': username, 'device_name': device_name, 'status': 'pending', 'time': get_bd_time().strftime("%Y-%m-%d %I:%M %p")}
             save_devices(devices)
             botToken = os.environ.get('TELEGRAM_BOT_TOKEN')
-            chatId = "7204862590"
             if botToken:
                 approve_link = f"https://vip-ai-bot.onrender.com/api/approve/{device_id}"
-                msg = f"🚨 *New Device Login Attempt!*\n\n👤 *User:* `{username}`\n📱 *Device:* `{device_name}`\n🕒 *Time:* `{devices[device_id]['time']}`\n\n✅ *Click below to Approve this device:*\n[👉 APPROVE DEVICE NOW]({approve_link})"
-                try:
-                    url = f"https://api.telegram.org/bot{botToken}/sendMessage"
-                    req = urllib.request.Request(url, data=json.dumps({'chat_id': chatId, 'text': msg, 'parse_mode': 'Markdown'}).encode('utf-8'), headers={'Content-Type': 'application/json'})
-                    urllib.request.urlopen(req)
-                except Exception as e: print("TG Error:", e)
+                msg = f"🚨 *New Device Login Attempt!*\n\n👤 *User:* `{username}`\n📱 *Device:* `{device_name}`\n\n✅ *Approve below:*\n[👉 APPROVE DEVICE NOW]({approve_link})"
+                try: urllib.request.urlopen(urllib.request.Request(f"https://api.telegram.org/bot{botToken}/sendMessage", data=json.dumps({'chat_id': "7204862590", 'text': msg, 'parse_mode': 'Markdown'}).encode('utf-8'), headers={'Content-Type': 'application/json'}))
+                except: pass
 
         return jsonify({"status": "pending", "message": "আপনার ডিভাইসটি এডমিনের এপ্রুভালের জন্য অপেক্ষমান রয়েছে।"})
-    else:
-        return jsonify({"status": "error", "message": "ভুল আইডি বা পাসওয়ার্ড!"})
+    return jsonify({"status": "error", "message": "ভুল আইডি বা পাসওয়ার্ড!"})
 
 @app.route('/api/approve/<device_id>')
 def approve_device(device_id):
@@ -125,123 +115,151 @@ def approve_device(device_id):
     if device_id in devices:
         devices[device_id]['status'] = 'approved'
         save_devices(devices)
-        return f"<div style='font-family: sans-serif; text-align: center; margin-top: 50px;'><h1 style='color: green;'>✅ Device Approved Successfully!</h1><h2>User: {devices[device_id]['username']}</h2><p>The user can now access the bot.</p></div>"
-    return "<h1 style='color: red; text-align: center; margin-top: 50px;'>❌ Invalid Device ID!</h1>"
+        return f"<div style='text-align: center; margin-top: 50px;'><h1 style='color: green;'>✅ Approved!</h1><h2>User: {devices[device_id]['username']}</h2></div>"
+    return "<h1 style='color: red; text-align: center;'>❌ Invalid!</h1>"
 
 @app.route('/api/sync_price', methods=['POST'])
 def sync_price():
     try:
-        data = request.get_json()
-        tv_price = float(data.get('tv_price'))
-        spot_data = tv.get_hist(symbol='XAUUSD', exchange='OANDA', interval=Interval.in_1_minute, n_bars=10)
-        if spot_data is not None and not spot_data.empty:
-            tv_live_price = float(spot_data['close'].iloc[-1])
-            offset = tv_live_price - tv_price
-            with open("offset.txt", "w") as f: f.write(str(offset))
-            return jsonify({"status": "success", "message": "Price Synced Successfully!"})
-        return jsonify({"status": "error", "message": "Failed to fetch live data."})
+        tv_price = float(request.get_json().get('tv_price'))
+        spot = tv.get_hist(symbol='XAUUSD', exchange='OANDA', interval=Interval.in_1_minute, n_bars=10)
+        if spot is not None and not spot.empty:
+            with open("offset.txt", "w") as f: f.write(str(float(spot['close'].iloc[-1]) - tv_price))
+            return jsonify({"status": "success", "message": "Synced!"})
+        return jsonify({"status": "error", "message": "Failed."})
     except Exception as e: return jsonify({"status": "error", "message": str(e)})
-
-@app.route('/api/submit_form', methods=['POST'])
-def submit_form():
-    try:
-        data = request.get_json()
-        botToken = os.environ.get('TELEGRAM_BOT_TOKEN')
-        chatId = "7204862590"
-        msg = data.get('message')
-        url = f"https://api.telegram.org/bot{botToken}/sendMessage"
-        req = urllib.request.Request(url, data=json.dumps({'chat_id': chatId, 'text': msg, 'parse_mode': 'Markdown'}).encode('utf-8'), headers={'Content-Type': 'application/json'})
-        urllib.request.urlopen(req)
-        return jsonify({"status": "success"})
-    except: return jsonify({"status": "error"})
 
 def fetch_tradingview_data():
     global market_cache
-    current_time = time.time()
-    if current_time - market_cache["time"] < 60 and market_cache["spot"] is not None:
-        return market_cache["spot"], market_cache["eu"]
+    if time.time() - market_cache["time"] < 60 and market_cache["spot"] is not None: return market_cache["spot"], market_cache["eu"]
     try:
-        # EMA 200 এর জন্য ২৫০ ক্যান্ডেল ফেচ করা হচ্ছে
         spot = tv.get_hist(symbol='XAUUSD', exchange='OANDA', interval=Interval.in_1_minute, n_bars=250)
         eu = tv.get_hist(symbol='EURUSD', exchange='OANDA', interval=Interval.in_1_minute, n_bars=100)
-        market_cache.update({"time": current_time, "spot": spot, "eu": eu})
+        market_cache.update({"time": time.time(), "spot": spot, "eu": eu})
         return spot, eu
     except: return market_cache["spot"], market_cache["eu"]
 
 def analyze_market():
     state = load_state()
     active_trade_forex = state.get("active_trade_forex")
+    active_trade_binary = state.get("active_trade_binary")
     trade_history = state.get("trade_history", [])
     
     forex_signal = {"asset": "GOLD (XAUUSD)", "type": "FOREX", "action": "WAIT ⏳", "entry": "--", "tp1": "--", "tp2": "--", "sl": "--", "status": "Analyzing...", "message": "উপযুক্ত এন্ট্রির জন্য অপেক্ষা করছে..."}
-    binary_signal = {"asset": "EUR/USD", "type": "BINARY", "action": "WAIT ⏳", "timeframe": "--", "payout": "--", "status": "Analyzing...", "message": "মার্কেট স্ক্যান করা হচ্ছে..."}
+    binary_signal = {"asset": "EUR/USD", "type": "BINARY", "action": "WAIT ⏳", "timeframe": "-- : --", "status": "Analyzing...", "message": "মার্কেট স্ক্যান করা হচ্ছে..."}
 
-    if datetime.now().weekday() >= 5: 
-        forex_signal.update({"action": "WEEKEND ⏸️", "status": "Market Offline", "message": "আজ উইকেন্ড! ফরেক্স মার্কেট বন্ধ রয়েছে।"})
+    bd_now = get_bd_time()
+    
+    if bd_now.weekday() >= 5: 
+        forex_signal.update({"action": "WEEKEND ⏸️", "status": "Market Offline", "message": "আজ উইকেন্ড! মার্কেট বন্ধ।"})
+        binary_signal.update({"action": "WEEKEND ⏸️", "status": "Market Offline", "message": "আজ উইকেন্ড! OTC অফ।"})
         return jsonify({"forex": forex_signal, "binary": binary_signal, "history": trade_history[:10]})
 
     try:
         spot_data, eu_data = fetch_tradingview_data()
+        
+        # 🚀 Forex Logic (Unchanged)
         if spot_data is not None and not spot_data.empty and len(spot_data) >= 200:
             spot_data['EMA_20'] = ta.trend.ema_indicator(spot_data['close'].squeeze(), window=20)
             spot_data['EMA_50'] = ta.trend.ema_indicator(spot_data['close'].squeeze(), window=50)
             spot_data['EMA_200'] = ta.trend.ema_indicator(spot_data['close'].squeeze(), window=200)
             spot_data['RSI'] = ta.momentum.rsi(spot_data['close'].squeeze(), window=14)
             
-            last = spot_data.iloc[-1]
-            close = float(last['close']) - get_offset()
-            rsi, ema20, ema50, ema200 = float(last['RSI']), float(last['EMA_20']), float(last['EMA_50']), float(last['EMA_200'])
+            close = float(spot_data.iloc[-1]['close']) - get_offset()
+            rsi, ema20, ema50, ema200 = float(spot_data.iloc[-1]['RSI']), float(spot_data.iloc[-1]['EMA_20']), float(spot_data.iloc[-1]['EMA_50']), float(spot_data.iloc[-1]['EMA_200'])
             
-            # ফলাফল আপডেট লজিক
             if active_trade_forex:
                 if active_trade_forex['action'] == 'BUY 🟢':
-                    if close >= active_trade_forex['tp1_val']:
-                        active_trade_forex['result'] = 'WIN ✅'
-                        trade_history.insert(0, active_trade_forex)
-                        active_trade_forex = None
-                    elif close <= active_trade_forex['sl_val']:
-                        active_trade_forex['result'] = 'LOSS ❌'
-                        trade_history.insert(0, active_trade_forex)
-                        active_trade_forex = None
+                    if close >= active_trade_forex['tp1_val']: active_trade_forex['result'] = 'WIN ✅'; trade_history.insert(0, active_trade_forex); active_trade_forex = None
+                    elif close <= active_trade_forex['sl_val']: active_trade_forex['result'] = 'LOSS ❌'; trade_history.insert(0, active_trade_forex); active_trade_forex = None
                 elif active_trade_forex['action'] == 'SELL 🔴':
-                    if close <= active_trade_forex['tp1_val']:
-                        active_trade_forex['result'] = 'WIN ✅'
-                        trade_history.insert(0, active_trade_forex)
-                        active_trade_forex = None
-                    elif close >= active_trade_forex['sl_val']:
-                        active_trade_forex['result'] = 'LOSS ❌'
-                        trade_history.insert(0, active_trade_forex)
-                        active_trade_forex = None
+                    if close <= active_trade_forex['tp1_val']: active_trade_forex['result'] = 'WIN ✅'; trade_history.insert(0, active_trade_forex); active_trade_forex = None
+                    elif close >= active_trade_forex['sl_val']: active_trade_forex['result'] = 'LOSS ❌'; trade_history.insert(0, active_trade_forex); active_trade_forex = None
 
-            # 🚀 ১০০% একুরেসি ও ফিক্সড পিপস (৫৫ পিপস) লজিক
             if active_trade_forex is None:
-                pip_55 = 5.5  # ৫৫ পিপস (XAUUSD)
-                pip_80 = 8.0  # ৮০ পিপস
-                
+                pip_55, pip_80 = 5.5, 8.0
                 if close > ema200 and ema20 > ema50 and 50 < rsi < 70:
-                    active_trade_forex = {"time": datetime.now().strftime("%I:%M %p"), "asset": "GOLD (XAUUSD)", "type": "FOREX", "action": "BUY 🟢", "entry": close, "tp1_val": close + pip_55, "tp2_val": close + pip_80, "sl_val": close - pip_55, "result": "Running ⏳"}
+                    active_trade_forex = {"time": bd_now.strftime("%I:%M %p"), "asset": "GOLD (XAUUSD)", "type": "FOREX", "action": "BUY 🟢", "entry": close, "tp1_val": close + pip_55, "tp2_val": close + pip_80, "sl_val": close - pip_55, "result": "Running ⏳"}
                 elif close < ema200 and ema20 < ema50 and 30 < rsi < 50:
-                    active_trade_forex = {"time": datetime.now().strftime("%I:%M %p"), "asset": "GOLD (XAUUSD)", "type": "FOREX", "action": "SELL 🔴", "entry": close, "tp1_val": close - pip_55, "tp2_val": close - pip_80, "sl_val": close + pip_55, "result": "Running ⏳"}
+                    active_trade_forex = {"time": bd_now.strftime("%I:%M %p"), "asset": "GOLD (XAUUSD)", "type": "FOREX", "action": "SELL 🔴", "entry": close, "tp1_val": close - pip_55, "tp2_val": close - pip_80, "sl_val": close + pip_55, "result": "Running ⏳"}
 
             if active_trade_forex:
                 forex_signal.update({"action": active_trade_forex['action'], "entry": f"{active_trade_forex['entry']:.2f}", "tp1": f"{active_trade_forex['tp1_val']:.2f}", "tp2": f"{active_trade_forex['tp2_val']:.2f}", "sl": f"{active_trade_forex['sl_val']:.2f}", "status": "Running...", "message": "AI Confirmed: Trade is Currently Running."})
-    except: pass
+        
+        # 🚀 Binary Setup (Advance Logic & Result Track)
+        if eu_data is not None and not eu_data.empty and len(eu_data) >= 20:
+            
+            # Check Binary Result
+            if active_trade_binary:
+                try:
+                    entry_dt = datetime.strptime(active_trade_binary['entry_time_full'], "%Y-%m-%d %H:%M:%S")
+                    expiry_dt = datetime.strptime(active_trade_binary['expiry_time_full'], "%Y-%m-%d %H:%M:%S")
+                    current_close = float(eu_data.iloc[-1]['close'])
+                    
+                    if bd_now >= entry_dt and active_trade_binary.get('entry_price') is None:
+                        active_trade_binary['entry_price'] = current_close
+                        active_trade_binary['status'] = "Running ⏳"
+                        
+                    elif bd_now >= expiry_dt and active_trade_binary.get('entry_price') is not None:
+                        entry_p = active_trade_binary['entry_price']
+                        is_call = 'CALL' in active_trade_binary['action']
+                        
+                        if is_call and current_close > entry_p: active_trade_binary['result'] = 'WIN ✅'
+                        elif not is_call and current_close < entry_p: active_trade_binary['result'] = 'WIN ✅'
+                        elif current_close == entry_p: active_trade_binary['result'] = 'REFUND 🔄'
+                        else: active_trade_binary['result'] = 'LOSS ❌'
+                            
+                        active_trade_binary['entry'] = f"{entry_p:.5f}"
+                        active_trade_binary['tp1_val'] = "1 Min Exp." 
+                        active_trade_binary['sl_val'] = f"{current_close:.5f}"
+                        
+                        trade_history.insert(0, active_trade_binary)
+                        active_trade_binary = None
+                except Exception as e: print("Bin Result Error:", e); active_trade_binary = None
+                    
+            # Generate New Binary Signal
+            if active_trade_binary is None:
+                eu_data['RSI'] = ta.momentum.rsi(eu_data['close'].squeeze(), window=14)
+                indicator_bb = ta.volatility.BollingerBands(close=eu_data['close'].squeeze(), window=20, window_dev=2)
+                eu_data['BB_lower'] = indicator_bb.bollinger_lband()
+                eu_data['BB_upper'] = indicator_bb.bollinger_hband()
+                
+                eu_close = float(eu_data.iloc[-1]['close'])
+                eu_rsi = float(eu_data.iloc[-1]['RSI'])
+                bb_low = float(eu_data.iloc[-1]['BB_lower'])
+                bb_up = float(eu_data.iloc[-1]['BB_upper'])
+                
+                action = None
+                if eu_rsi < 30 and eu_close <= bb_low: action = "CALL 🟢"
+                elif eu_rsi > 70 and eu_close >= bb_up: action = "PUT 🔴"
+                    
+                if action:
+                    entry_dt = bd_now + timedelta(minutes=1)
+                    expiry_dt = bd_now + timedelta(minutes=2)
+                    
+                    active_trade_binary = {
+                        "time": bd_now.strftime("%I:%M %p"),
+                        "asset": "EUR/USD", "type": "BINARY", "action": action,
+                        "entry_time_full": entry_dt.strftime("%Y-%m-%d %H:%M:%S"),
+                        "expiry_time_full": expiry_dt.strftime("%Y-%m-%d %H:%M:%S"),
+                        "time_display": f"{entry_dt.strftime('%H:%M')} - {expiry_dt.strftime('%H:%M')}",
+                        "entry_price": None, "status": "Waiting for Entry ⏳", "result": "Pending"
+                    }
+            
+            if active_trade_binary:
+                binary_signal.update({
+                    "action": active_trade_binary['action'],
+                    "timeframe": active_trade_binary['time_display'],
+                    "status": active_trade_binary['status'],
+                    "message": "অ্যাডভান্স সিগন্যাল! এন্ট্রির জন্য প্রস্তুত হোন।" if active_trade_binary.get('entry_price') is None else "ট্রেড বর্তমানে রানিং..."
+                })
+    except Exception as e: print("System Error:", e)
 
-    try:
-        if eu_data is not None and not eu_data.empty and len(eu_data) >= 14:
-            eu_data['RSI'] = ta.momentum.rsi(eu_data['close'].squeeze(), window=14)
-            eu_rsi = float(eu_data.iloc[-1]['RSI'])
-            if eu_rsi < 30: binary_signal.update({"action": "UP 🟢", "timeframe": "1 Minute", "payout": "80%+", "status": "Signal Active", "message": "Oversold Zone! 1 Min Reversal Expected."})
-            elif eu_rsi > 70: binary_signal.update({"action": "DOWN 🔴", "timeframe": "1 Minute", "payout": "80%+", "status": "Signal Active", "message": "Overbought Zone! 1 Min Reversal Expected."})
-    except: pass
-
-    state.update({'active_trade_forex': active_trade_forex, 'trade_history': trade_history[:10]})
+    state.update({'active_trade_forex': active_trade_forex, 'active_trade_binary': active_trade_binary, 'trade_history': trade_history[:10]})
     save_state(state)
     return jsonify({"forex": forex_signal, "binary": binary_signal, "history": trade_history[:10]})
 
 @app.route('/api/get_signal')
-def get_signal():
-    return analyze_market()
+def get_signal(): return analyze_market()
 
-if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+if __name__ == '__main__': app.run(debug=True, port=5000)
