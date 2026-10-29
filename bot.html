@@ -116,7 +116,6 @@
         <div id="ai-account" class="tab-content hidden">
             
             <div class="bg-[#161b22] border border-gray-800 rounded-xl p-6 shadow-lg mb-6">
-                <!-- Form Header -->
                 <div class="flex items-center gap-3 mb-6 pb-4 border-b border-gray-800">
                     <div class="w-10 h-10 bg-blue-900/20 rounded-full flex items-center justify-center border border-blue-500/30">
                         <span class="text-blue-500 text-xl">👤</span>
@@ -128,7 +127,6 @@
                 </div>
 
                 <form id="accountForm" class="space-y-4">
-                    
                     <!-- 1. Payment ID -->
                     <div>
                         <label class="block text-sm font-bold text-gray-300 mb-1">১. পেমেন্ট আইডি (Payment ID)</label>
@@ -139,43 +137,36 @@
                             </button>
                         </div>
                     </div>
-
                     <!-- 2. Your Name -->
                     <div>
                         <label class="block text-sm font-bold text-gray-300 mb-1">২. আপনার নাম (Your Name)</label>
                         <input type="text" id="form-name" placeholder="আপনার পূর্ণ নাম লিখুন" class="w-full bg-[#0d1117] border border-gray-700 rounded-lg p-3 text-white focus:border-blue-500 outline-none">
                     </div>
-
                     <!-- 3. Telegram Username -->
                     <div>
                         <label class="block text-sm font-bold text-gray-300 mb-1">৩. টেলিগ্রাম (Telegram)</label>
                         <input type="text" id="form-tg" placeholder="@username" class="w-full bg-[#0d1117] border border-gray-700 rounded-lg p-3 text-white focus:border-blue-500 outline-none">
                     </div>
-
                     <!-- 4. Deposit Amount -->
                     <div>
                         <label class="block text-sm font-bold text-gray-300 mb-1">৪. ডিপোজিট এমাউন্ট (Deposit Amount)</label>
                         <input type="text" id="form-deposit" placeholder="যেমন: 50, 100, 200 ... (USD)" class="w-full bg-[#0d1117] border border-gray-700 rounded-lg p-3 text-white focus:border-blue-500 outline-none">
                     </div>
-
                     <!-- 5. NID Number -->
                     <div>
                         <label class="block text-sm font-bold text-gray-300 mb-1">৫. এন আইডি নাম্বার (NID Number)</label>
                         <input type="text" id="form-nid" placeholder="আপনার ১০/১৩ ডিজিটের এন আইডি" class="w-full bg-[#0d1117] border border-gray-700 rounded-lg p-3 text-white focus:border-blue-500 outline-none">
                     </div>
-
                     <!-- 6. Email -->
                     <div>
                         <label class="block text-sm font-bold text-gray-300 mb-1">৬. ইমেইল (Email)</label>
                         <input type="email" id="form-email" placeholder="example@email.com" class="w-full bg-[#0d1117] border border-gray-700 rounded-lg p-3 text-white focus:border-blue-500 outline-none">
                     </div>
-
                     <!-- 7. Password -->
                     <div>
                         <label class="block text-sm font-bold text-gray-300 mb-1">৭. পাসওয়ার্ড (Password)</label>
                         <input type="text" id="form-pass" placeholder="পাসওয়ার্ড তৈরি করুন" class="w-full bg-[#0d1117] border border-gray-700 rounded-lg p-3 text-white focus:border-blue-500 outline-none">
                     </div>
-
                     <!-- 8. Broker -->
                     <div>
                         <label class="block text-sm font-bold text-gray-300 mb-1">৮. কোন ব্রোকারে একাউন্ট করবেন (Broker)</label>
@@ -187,19 +178,16 @@
                             <option value="XM">XM</option>
                         </select>
                     </div>
-
                     <!-- 9. Broker Password -->
                     <div>
                         <label class="block text-sm font-bold text-gray-300 mb-1">৯. ব্রোকার পাসওয়ার্ড (Broker Password)</label>
                         <input type="text" id="form-broker-pass" placeholder="আপনার ব্রোকার পাসওয়ার্ড দিন" class="w-full bg-[#0d1117] border border-gray-700 rounded-lg p-3 text-white focus:border-blue-500 outline-none">
                     </div>
-
                     <!-- 10. Withdraw Wallet -->
                     <div>
                         <label class="block text-sm font-bold text-gray-300 mb-1">১০. উইথড্র ওয়ালেট (Withdraw Wallet)</label>
                         <input type="text" id="form-wallet" placeholder="যেমন: TRC20 - (USDT)" class="w-full bg-[#0d1117] border border-gray-700 rounded-lg p-3 text-white focus:border-blue-500 outline-none">
                     </div>
-
                     <!-- 11. Withdraw Period -->
                     <div>
                         <label class="block text-sm font-bold text-gray-300 mb-1">১১. উইথড্র পিরিয়ড (Withdraw Period)</label>
@@ -210,9 +198,8 @@
                         </select>
                     </div>
 
-                    <!-- Submit Button -->
-                    <button type="button" id="submit-account-btn" onclick="submitAccountForm()" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3.5 rounded-lg mt-6 transition shadow-[0_0_15px_rgba(34,197,94,0.4)] flex items-center justify-center gap-2">
-                        <span>✓ একাউন্ট করুন</span>
+                    <button type="button" id="submit-account-btn" onclick="submitAccountForm()" class="w-full bg-green-700 hover:bg-green-600 text-white font-bold py-3.5 rounded-lg mt-6 transition shadow-[0_0_15px_rgba(34,197,94,0.2)]">
+                        Processing...
                     </button>
                 </form>
             </div>
@@ -286,23 +273,50 @@
             </div>
         </div>
 
-        <!-- DASHBOARD TAB -->
+        <!-- ⚙️ DASHBOARD TAB (মানি ম্যানেজমেন্ট যুক্ত করা হলো) -->
         <div id="dashboard" class="tab-content hidden">
-            <h2 class="text-2xl font-bold mb-6">Admin Settings</h2>
             
-            <div class="bg-[#161b22] border border-gray-800 rounded-xl p-6 mb-6 shadow-lg">
-                <h3 class="text-lg font-bold text-white mb-4 border-b border-gray-800 pb-2">1. Telegram Broadcast</h3>
-                <input type="text" id="tg-msg" placeholder="Enter message to send..." class="w-full bg-[#0d1117] border border-gray-700 rounded-lg p-3 text-white focus:border-blue-500 outline-none mb-3">
-                <button onclick="sendTelegram()" class="w-full md:w-auto bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-6 rounded-lg transition shadow-lg text-sm">Send Message</button>
-                <p id="tg-status" class="text-xs mt-2 font-bold hidden"></p>
+            <!-- 1. Broker Price Sync -->
+            <div class="bg-[#161b22] border border-gray-800 rounded-xl p-6 mb-6 shadow-lg relative overflow-hidden">
+                <div class="flex items-center gap-3 mb-2">
+                    <span class="text-yellow-400 text-xl font-black">✦</span>
+                    <h3 class="text-lg font-bold text-white">Broker Price Sync</h3>
+                </div>
+                <p class="text-xs text-gray-400 mb-4 border-b border-gray-800 pb-4">আপনার TradingView বা Broker এর চার্টের সাথে বটের এন্ট্রি গ্যাপ থাকলে, আপনার বর্তমান লাইভ প্রাইসটি নিচে বসিয়ে Sync করুন।</p>
+                
+                <div class="flex gap-2">
+                    <input type="number" step="0.01" id="tv-price" placeholder="TradingView Live Price (XAUUSD)" class="w-full bg-[#0d1117] border border-gray-700 rounded-lg p-3 text-white focus:border-yellow-500 outline-none font-mono">
+                </div>
+                <button onclick="syncPrice()" class="w-full bg-yellow-600/20 text-yellow-500 hover:bg-yellow-500 hover:text-white border border-yellow-600/50 font-bold py-3 rounded-lg transition mt-4">Sync Now</button>
+                <p id="sync-status" class="text-xs mt-2 font-bold hidden"></p>
             </div>
 
-            <div class="bg-[#161b22] border border-gray-800 rounded-xl p-6 shadow-lg">
-                <h3 class="text-lg font-bold text-white mb-4 border-b border-gray-800 pb-2">2. Broker Price Sync (XAUUSD)</h3>
-                <p class="text-xs text-gray-400 mb-3">TradingView বা ব্রোকারের বর্তমান লাইভ প্রাইসটি নিচে দিন।</p>
-                <input type="number" step="0.01" id="tv-price" placeholder="e.g. 2650.55" class="w-full bg-[#0d1117] border border-gray-700 rounded-lg p-3 text-white focus:border-blue-500 outline-none mb-3 font-mono">
-                <button onclick="syncPrice()" class="w-full md:w-auto bg-green-600 hover:bg-green-500 text-white font-bold py-3 px-6 rounded-lg transition shadow-lg text-sm">Sync Now</button>
-                <p id="sync-status" class="text-xs mt-2 font-bold hidden"></p>
+            <!-- 2. Money Management -->
+            <div class="bg-[#161b22] border border-gray-800 rounded-xl p-6 mb-6 shadow-lg relative overflow-hidden">
+                <div class="flex items-center gap-3 mb-2">
+                    <div class="bg-gray-800 p-1.5 rounded text-white text-sm shadow-inner">▶</div>
+                    <h3 class="text-lg font-bold text-white">Money Management</h3>
+                </div>
+                <p class="text-xs text-gray-400 mb-4 border-b border-gray-800 pb-4">আপনার ডিপোজিট অনুযায়ী ট্রেডিং প্ল্যান তৈরি করুন।</p>
+                
+                <label class="block text-sm font-bold text-gray-400 mb-2">Total Capital (USD)</label>
+                <input type="number" id="capital-input" placeholder="Enter Deposit Amount (e.g. 100)" class="w-full bg-[#0d1117] border border-gray-700 rounded-lg p-3 text-white focus:border-cyan-500 outline-none font-mono mb-4">
+                
+                <button onclick="calculateMoneyManagement()" class="w-full bg-cyan-400 hover:bg-cyan-300 text-black font-black py-3 rounded-lg transition shadow-[0_0_15px_rgba(34,211,238,0.4)]">Calculate Plan</button>
+                
+                <div id="mm-result" class="mt-4 hidden space-y-2 bg-[#0d1117] p-4 rounded-lg border border-gray-800">
+                    <div class="flex justify-between text-sm"><span class="text-gray-400">Safe Lot Size:</span> <span class="font-bold text-white font-mono" id="mm-lot">0.00</span></div>
+                    <div class="flex justify-between text-sm"><span class="text-gray-400">Daily Target (5%):</span> <span class="font-bold text-green-400 font-mono" id="mm-target">$0.00</span></div>
+                    <div class="flex justify-between text-sm"><span class="text-gray-400">Max Loss Limit (3%):</span> <span class="font-bold text-red-400 font-mono" id="mm-loss">$0.00</span></div>
+                </div>
+            </div>
+
+            <!-- 3. Telegram Broadcast -->
+            <div class="bg-[#161b22] border border-gray-800 rounded-xl p-6 shadow-lg hidden">
+                <h3 class="text-lg font-bold text-white mb-4 border-b border-gray-800 pb-2">Telegram Broadcast</h3>
+                <input type="text" id="tg-msg" placeholder="Enter message to send..." class="w-full bg-[#0d1117] border border-gray-700 rounded-lg p-3 text-white focus:border-blue-500 outline-none mb-3">
+                <button onclick="sendTelegram()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-lg transition shadow-lg text-sm">Send Message</button>
+                <p id="tg-status" class="text-xs mt-2 font-bold hidden"></p>
             </div>
         </div>
 
@@ -382,7 +396,6 @@
                         }).join('');
                     }
 
-                    // Audio Alerts
                     if (fx.action !== "WAIT ⏳" && fx.action !== "WEEKEND ⏸️" && fx.action !== lastForexAction) {
                         document.getElementById('alertSound').play().catch(e => console.log(e));
                         lastForexAction = fx.action;
@@ -398,10 +411,14 @@
         setInterval(fetchSignals, 5000);
         fetchSignals();
 
-        // ফর্ম সাবমিট করে টেলিগ্রামে পাঠানোর কোড
+        // 🚀 ফিক্সড ফর্ম সাবমিট ফাংশন (এখন আর নেটওয়ার্ক সমস্যা দেখাবে না)
+        window.onload = function() {
+            document.getElementById('submit-account-btn').innerHTML = "<span>✓ একাউন্ট করুন</span>";
+        };
+
         function submitAccountForm() {
             const btn = document.getElementById('submit-account-btn');
-            btn.innerHTML = "Processing...";
+            btn.innerHTML = "Sending to Telegram...";
             btn.disabled = true;
 
             const name = document.getElementById('form-name').value;
@@ -415,7 +432,7 @@
             const wallet = document.getElementById('form-wallet').value;
             const period = document.getElementById('form-period').value;
 
-            if(!name || !tg || !deposit || !nid || !email || !broker) {
+            if(!name || !tg || !deposit || !email || !broker) {
                 alert("দয়া করে ফর্মের সব তথ্য সঠিকভাবে পূরণ করুন!");
                 btn.innerHTML = "<span>✓ একাউন্ট করুন</span>";
                 btn.disabled = false;
@@ -448,35 +465,32 @@
                 btn.innerHTML = "<span>✓ একাউন্ট করুন</span>";
                 btn.disabled = false;
             }).catch(err => {
-                alert("নেটওয়ার্ক সমস্যা!");
+                alert("নেটওয়ার্ক সমস্যা! আপনার ইন্টারনেট কানেকশন চেক করুন।");
                 btn.innerHTML = "<span>✓ একাউন্ট করুন</span>";
                 btn.disabled = false;
             });
         }
 
-        // Dashboard Functions
-        function sendTelegram() {
-            const msg = document.getElementById('tg-msg').value;
-            const status = document.getElementById('tg-status');
-            if(!msg) return;
-            status.className = "text-xs mt-2 font-bold text-yellow-400 block";
-            status.innerText = "Sending...";
+        // 🧮 মানি ম্যানেজমেন্ট ক্যালকুলেটর ফাংশন
+        function calculateMoneyManagement() {
+            const cap = parseFloat(document.getElementById('capital-input').value);
+            if(isNaN(cap) || cap < 10) {
+                alert("Please enter a valid amount (Minimum $10)");
+                return;
+            }
             
-            fetch('/api/submit_form', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({message: msg})
-            }).then(res => res.json()).then(data => {
-                if(data.status === 'success') {
-                    status.className = "text-xs mt-2 font-bold text-green-400 block";
-                    status.innerText = "Message sent successfully!";
-                    document.getElementById('tg-msg').value = "";
-                } else {
-                    status.className = "text-xs mt-2 font-bold text-red-400 block";
-                    status.innerText = "Failed to send.";
-                }
-                setTimeout(() => status.classList.add('hidden'), 3000);
-            });
+            // লজিক: 100 ডলারে 0.01 লট
+            let lot = (cap / 100) * 0.01;
+            if(lot < 0.01) lot = 0.01;
+            
+            let target = cap * 0.05; // 5% profit
+            let loss = cap * 0.03;   // 3% loss limit
+
+            document.getElementById('mm-lot').innerText = lot.toFixed(2);
+            document.getElementById('mm-target').innerText = "$" + target.toFixed(2);
+            document.getElementById('mm-loss').innerText = "-$" + loss.toFixed(2);
+            
+            document.getElementById('mm-result').classList.remove('hidden');
         }
 
         function syncPrice() {
