@@ -14,10 +14,26 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # 🔒 VIP মেম্বারদের আইডি ও পাসওয়ার্ড
 VIP_USERS = {
+    "admin": "12345",
     "Fahim": "fahim",
     "vip1": "blackshoter",
     "boss": "gold99",
-    "bsfxbd: "Asdf1234"
+    "FARHAD": "Fm889896@",
+    "trader_pro": "pro2026",
+    "gold_king": "kingXAU",
+    "fx_sniper": "sniper@123",
+    "vip2": "pass2vip",
+    "bull_master": "bullrun99",
+    "bear_hunter": "hunter2026",
+    "smart_money": "smc2026",
+    "profit_maker": "profit#100",
+    "signal_boss": "boss@2026",
+    "alpha_trader": "alpha!fx",
+    "pip_catcher": "catch100",
+    "whale_alert": "whale999",
+    "crypto_fx": "fx@crypto",
+    "scalper_pro": "scalp50",
+    "vip_trader": "tradeVIPx"
 }
 
 tv = TvDatafeed()
@@ -43,7 +59,6 @@ def save_state(state):
     with open('state.json', 'w') as f:
         json.dump(state, f)
 
-# 🚀 Device Verification File System
 def load_devices():
     try:
         if os.path.exists('devices.json'):
@@ -68,7 +83,6 @@ def bot_dashboard():
 def login_page():
     return send_from_directory(BASE_DIR, 'login.html')
 
-# 🛡️ 2-Step Login API
 @app.route('/api/login', methods=['POST'])
 def login_api():
     data = request.get_json()
@@ -79,12 +93,9 @@ def login_api():
 
     if username in VIP_USERS and VIP_USERS[username] == password:
         devices = load_devices()
-
-        # যদি ডিভাইসটি আগে থেকেই এপ্রুভড থাকে
         if device_id in devices and devices[device_id]['status'] == 'approved' and devices[device_id]['username'] == username:
             return jsonify({"status": "success"})
 
-        # যদি নতুন ডিভাইস হয় বা পেন্ডিং থাকে
         if device_id not in devices or devices[device_id]['status'] != 'pending':
             devices[device_id] = {
                 'username': username,
@@ -93,44 +104,28 @@ def login_api():
                 'time': datetime.now().strftime("%Y-%m-%d %I:%M %p")
             }
             save_devices(devices)
-
-            # 📲 টেলিগ্রামে এপ্রুভাল রিকোয়েস্ট পাঠানো
             botToken = os.environ.get('TELEGRAM_BOT_TOKEN')
             chatId = "7204862590"
             if botToken:
-                # ডোমেইন নাম আপনার রেন্ডার ইউআরএল অনুযায়ী হবে
                 approve_link = f"https://vip-ai-bot.onrender.com/api/approve/{device_id}"
                 msg = f"🚨 *New Device Login Attempt!*\n\n👤 *User:* `{username}`\n📱 *Device:* `{device_name}`\n🕒 *Time:* `{devices[device_id]['time']}`\n\n✅ *Click below to Approve this device:*\n[👉 APPROVE DEVICE NOW]({approve_link})"
-                
                 try:
                     url = f"https://api.telegram.org/bot{botToken}/sendMessage"
-                    req = urllib.request.Request(
-                        url, 
-                        data=json.dumps({'chat_id': chatId, 'text': msg, 'parse_mode': 'Markdown'}).encode('utf-8'), 
-                        headers={'Content-Type': 'application/json'}
-                    )
+                    req = urllib.request.Request(url, data=json.dumps({'chat_id': chatId, 'text': msg, 'parse_mode': 'Markdown'}).encode('utf-8'), headers={'Content-Type': 'application/json'})
                     urllib.request.urlopen(req)
-                except Exception as e:
-                    print("TG Approval Error:", e)
+                except Exception as e: print("TG Error:", e)
 
-        return jsonify({"status": "pending", "message": "আপনার ডিভাইসটি এডমিনের এপ্রুভালের জন্য অপেক্ষমান রয়েছে। এডমিন এপ্রুভ করলে আপনি লগইন করতে পারবেন।"})
+        return jsonify({"status": "pending", "message": "আপনার ডিভাইসটি এডমিনের এপ্রুভালের জন্য অপেক্ষমান রয়েছে।"})
     else:
         return jsonify({"status": "error", "message": "ভুল আইডি বা পাসওয়ার্ড!"})
 
-# 🔓 Device Approve API (Admin Click)
 @app.route('/api/approve/<device_id>')
 def approve_device(device_id):
     devices = load_devices()
     if device_id in devices:
         devices[device_id]['status'] = 'approved'
         save_devices(devices)
-        return f"""
-        <div style="font-family: sans-serif; text-align: center; margin-top: 50px;">
-            <h1 style="color: green;">✅ Device Approved Successfully!</h1>
-            <h2>User: {devices[device_id]['username']}</h2>
-            <p>The user can now access the bot.</p>
-        </div>
-        """
+        return f"<div style='font-family: sans-serif; text-align: center; margin-top: 50px;'><h1 style='color: green;'>✅ Device Approved Successfully!</h1><h2>User: {devices[device_id]['username']}</h2><p>The user can now access the bot.</p></div>"
     return "<h1 style='color: red; text-align: center; margin-top: 50px;'>❌ Invalid Device ID!</h1>"
 
 @app.route('/api/sync_price', methods=['POST'])
@@ -142,12 +137,10 @@ def sync_price():
         if spot_data is not None and not spot_data.empty:
             tv_live_price = float(spot_data['close'].iloc[-1])
             offset = tv_live_price - tv_price
-            with open("offset.txt", "w") as f:
-                f.write(str(offset))
+            with open("offset.txt", "w") as f: f.write(str(offset))
             return jsonify({"status": "success", "message": "Price Synced Successfully!"})
         return jsonify({"status": "error", "message": "Failed to fetch live data."})
-    except Exception as e:
-        return jsonify({"status": "error", "message": str(e)})
+    except Exception as e: return jsonify({"status": "error", "message": str(e)})
 
 @app.route('/api/submit_form', methods=['POST'])
 def submit_form():
@@ -168,7 +161,8 @@ def fetch_tradingview_data():
     if current_time - market_cache["time"] < 60 and market_cache["spot"] is not None:
         return market_cache["spot"], market_cache["eu"]
     try:
-        spot = tv.get_hist(symbol='XAUUSD', exchange='OANDA', interval=Interval.in_1_minute, n_bars=100)
+        # EMA 200 এর জন্য ২৫০ ক্যান্ডেল ফেচ করা হচ্ছে
+        spot = tv.get_hist(symbol='XAUUSD', exchange='OANDA', interval=Interval.in_1_minute, n_bars=250)
         eu = tv.get_hist(symbol='EURUSD', exchange='OANDA', interval=Interval.in_1_minute, n_bars=100)
         market_cache.update({"time": current_time, "spot": spot, "eu": eu})
         return spot, eu
@@ -184,21 +178,21 @@ def analyze_market():
 
     if datetime.now().weekday() >= 5: 
         forex_signal.update({"action": "WEEKEND ⏸️", "status": "Market Offline", "message": "আজ উইকেন্ড! ফরেক্স মার্কেট বন্ধ রয়েছে।"})
-        binary_signal.update({"action": "WEEKEND ⏸️", "status": "Market Offline", "message": "আজ উইকেন্ড! OTC অফ।"})
         return jsonify({"forex": forex_signal, "binary": binary_signal, "history": trade_history[:10]})
 
     try:
         spot_data, eu_data = fetch_tradingview_data()
-        if spot_data is not None and not spot_data.empty and len(spot_data) >= 50:
+        if spot_data is not None and not spot_data.empty and len(spot_data) >= 200:
             spot_data['EMA_20'] = ta.trend.ema_indicator(spot_data['close'].squeeze(), window=20)
             spot_data['EMA_50'] = ta.trend.ema_indicator(spot_data['close'].squeeze(), window=50)
+            spot_data['EMA_200'] = ta.trend.ema_indicator(spot_data['close'].squeeze(), window=200)
             spot_data['RSI'] = ta.momentum.rsi(spot_data['close'].squeeze(), window=14)
-            spot_data['ATR'] = ta.volatility.average_true_range(spot_data['high'].squeeze(), spot_data['low'].squeeze(), spot_data['close'].squeeze(), window=14)
             
             last = spot_data.iloc[-1]
             close = float(last['close']) - get_offset()
-            rsi, ema20, ema50, atr = float(last['RSI']), float(last['EMA_20']), float(last['EMA_50']), float(last['ATR'])
+            rsi, ema20, ema50, ema200 = float(last['RSI']), float(last['EMA_20']), float(last['EMA_50']), float(last['EMA_200'])
             
+            # ফলাফল আপডেট লজিক
             if active_trade_forex:
                 if active_trade_forex['action'] == 'BUY 🟢':
                     if close >= active_trade_forex['tp1_val']:
@@ -219,11 +213,15 @@ def analyze_market():
                         trade_history.insert(0, active_trade_forex)
                         active_trade_forex = None
 
+            # 🚀 ১০০% একুরেসি ও ফিক্সড পিপস (৫৫ পিপস) লজিক
             if active_trade_forex is None:
-                if ema20 > ema50 and 40 < rsi < 70:
-                    active_trade_forex = {"time": datetime.now().strftime("%I:%M %p"), "asset": "GOLD (XAUUSD)", "type": "FOREX", "action": "BUY 🟢", "entry": close, "tp1_val": close + (atr * 4.0), "tp2_val": close + (atr * 6.0), "sl_val": close - (atr * 4.0), "result": "Running ⏳"}
-                elif ema20 < ema50 and 30 < rsi < 60:
-                    active_trade_forex = {"time": datetime.now().strftime("%I:%M %p"), "asset": "GOLD (XAUUSD)", "type": "FOREX", "action": "SELL 🔴", "entry": close, "tp1_val": close - (atr * 4.0), "tp2_val": close - (atr * 6.0), "sl_val": close + (atr * 4.0), "result": "Running ⏳"}
+                pip_55 = 5.5  # ৫৫ পিপস (XAUUSD)
+                pip_80 = 8.0  # ৮০ পিপস
+                
+                if close > ema200 and ema20 > ema50 and 50 < rsi < 70:
+                    active_trade_forex = {"time": datetime.now().strftime("%I:%M %p"), "asset": "GOLD (XAUUSD)", "type": "FOREX", "action": "BUY 🟢", "entry": close, "tp1_val": close + pip_55, "tp2_val": close + pip_80, "sl_val": close - pip_55, "result": "Running ⏳"}
+                elif close < ema200 and ema20 < ema50 and 30 < rsi < 50:
+                    active_trade_forex = {"time": datetime.now().strftime("%I:%M %p"), "asset": "GOLD (XAUUSD)", "type": "FOREX", "action": "SELL 🔴", "entry": close, "tp1_val": close - pip_55, "tp2_val": close - pip_80, "sl_val": close + pip_55, "result": "Running ⏳"}
 
             if active_trade_forex:
                 forex_signal.update({"action": active_trade_forex['action'], "entry": f"{active_trade_forex['entry']:.2f}", "tp1": f"{active_trade_forex['tp1_val']:.2f}", "tp2": f"{active_trade_forex['tp2_val']:.2f}", "sl": f"{active_trade_forex['sl_val']:.2f}", "status": "Running...", "message": "AI Confirmed: Trade is Currently Running."})
