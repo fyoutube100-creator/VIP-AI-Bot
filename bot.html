@@ -10,6 +10,13 @@
             window.location.href = '/login.html';
         }
 
+        // 🔔 নোটিফিকেশন পারমিশন রিকোয়েস্ট
+        if ("Notification" in window) {
+            if (Notification.permission !== "granted" && Notification.permission !== "denied") {
+                Notification.requestPermission();
+            }
+        }
+
         function switchTab(tabId) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
             document.getElementById(tabId).classList.remove('hidden');
@@ -273,7 +280,7 @@
             </div>
         </div>
 
-        <!-- ⚙️ DASHBOARD TAB (মানি ম্যানেজমেন্ট যুক্ত করা হলো) -->
+        <!-- ⚙️ DASHBOARD TAB -->
         <div id="dashboard" class="tab-content hidden">
             
             <!-- 1. Broker Price Sync -->
@@ -310,23 +317,15 @@
                     <div class="flex justify-between text-sm"><span class="text-gray-400">Max Loss Limit (3%):</span> <span class="font-bold text-red-400 font-mono" id="mm-loss">$0.00</span></div>
                 </div>
             </div>
-
-            <!-- 3. Telegram Broadcast -->
-            <div class="bg-[#161b22] border border-gray-800 rounded-xl p-6 shadow-lg hidden">
-                <h3 class="text-lg font-bold text-white mb-4 border-b border-gray-800 pb-2">Telegram Broadcast</h3>
-                <input type="text" id="tg-msg" placeholder="Enter message to send..." class="w-full bg-[#0d1117] border border-gray-700 rounded-lg p-3 text-white focus:border-blue-500 outline-none mb-3">
-                <button onclick="sendTelegram()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-lg transition shadow-lg text-sm">Send Message</button>
-                <p id="tg-status" class="text-xs mt-2 font-bold hidden"></p>
-            </div>
         </div>
 
     </main>
 
     <!-- Audio Alerts -->
+    <!-- এই সাউন্ড ফাইলটি ব্যাকগ্রাউন্ডে বাজবে -->
     <audio id="alertSound" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" preload="auto"></audio>
 
     <script>
-        // Clock
         setInterval(() => {
             document.getElementById('current-time').innerText = new Date().toLocaleTimeString('en-US', {hour12: true});
         }, 1000);
@@ -396,12 +395,31 @@
                         }).join('');
                     }
 
+                    // 🚨 NEW: Notification & Audio Trigger (Forex)
                     if (fx.action !== "WAIT ⏳" && fx.action !== "WEEKEND ⏸️" && fx.action !== lastForexAction) {
-                        document.getElementById('alertSound').play().catch(e => console.log(e));
+                        document.getElementById('alertSound').play().catch(e => console.log("Audio play blocked by browser:", e));
+                        
+                        if ("Notification" in window && Notification.permission === "granted") {
+                            new Notification("🚨 BLACK SHOTER BOT SIGNAL READY!", {
+                                body: `Forex Signal ➔ GOLD: ${fx.action}\nEntry Price: ${fx.entry}`,
+                                vibrate: [200, 100, 200, 100, 200],
+                                silent: false // ফোনের ডিফল্ট নোটিফিকেশন সাউন্ড অন রাখার জন্য
+                            });
+                        }
                         lastForexAction = fx.action;
                     }
+
+                    // 🚨 NEW: Notification & Audio Trigger (Binary)
                     if (bin.action !== "WAIT ⏳" && bin.action !== "WEEKEND ⏸️" && bin.action !== lastBinaryAction) {
-                        document.getElementById('alertSound').play().catch(e => console.log(e));
+                        document.getElementById('alertSound').play().catch(e => console.log("Audio play blocked by browser:", e));
+                        
+                        if ("Notification" in window && Notification.permission === "granted") {
+                            new Notification("🚨 BLACK SHOTER BOT SIGNAL READY!", {
+                                body: `Binary Signal ➔ EUR/USD: ${bin.action}\nTime: ${bin.timeframe}`,
+                                vibrate: [200, 100, 200, 100, 200],
+                                silent: false
+                            });
+                        }
                         lastBinaryAction = bin.action;
                     }
                 })
@@ -411,7 +429,6 @@
         setInterval(fetchSignals, 5000);
         fetchSignals();
 
-        // 🚀 ফিক্সড ফর্ম সাবমিট ফাংশন (এখন আর নেটওয়ার্ক সমস্যা দেখাবে না)
         window.onload = function() {
             document.getElementById('submit-account-btn').innerHTML = "<span>✓ একাউন্ট করুন</span>";
         };
@@ -439,17 +456,7 @@
                 return;
             }
 
-            const msg = `🆕 *New AI Account Request*\n\n` +
-                        `👤 *Name:* ${name}\n` +
-                        `✈️ *Telegram:* ${tg}\n` +
-                        `💰 *Deposit:* ${deposit}\n` +
-                        `🪪 *NID:* ${nid}\n` +
-                        `📧 *Email:* ${email}\n` +
-                        `🔑 *Password:* ${pass}\n` +
-                        `🏦 *Broker:* ${broker}\n` +
-                        `🔐 *Broker Pass:* ${brokerPass}\n` +
-                        `💳 *Wallet:* ${wallet}\n` +
-                        `📅 *Period:* ${period}`;
+            const msg = `🆕 *New AI Account Request*\n\n👤 *Name:* ${name}\n✈️ *Telegram:* ${tg}\n💰 *Deposit:* ${deposit}\n🪪 *NID:* ${nid}\n📧 *Email:* ${email}\n🔑 *Password:* ${pass}\n🏦 *Broker:* ${broker}\n🔐 *Broker Pass:* ${brokerPass}\n💳 *Wallet:* ${wallet}\n📅 *Period:* ${period}`;
 
             fetch('/api/submit_form', {
                 method: 'POST',
@@ -471,25 +478,20 @@
             });
         }
 
-        // 🧮 মানি ম্যানেজমেন্ট ক্যালকুলেটর ফাংশন
         function calculateMoneyManagement() {
             const cap = parseFloat(document.getElementById('capital-input').value);
             if(isNaN(cap) || cap < 10) {
                 alert("Please enter a valid amount (Minimum $10)");
                 return;
             }
-            
-            // লজিক: 100 ডলারে 0.01 লট
             let lot = (cap / 100) * 0.01;
             if(lot < 0.01) lot = 0.01;
-            
-            let target = cap * 0.05; // 5% profit
-            let loss = cap * 0.03;   // 3% loss limit
+            let target = cap * 0.05; 
+            let loss = cap * 0.03;   
 
             document.getElementById('mm-lot').innerText = lot.toFixed(2);
             document.getElementById('mm-target').innerText = "$" + target.toFixed(2);
             document.getElementById('mm-loss').innerText = "-$" + loss.toFixed(2);
-            
             document.getElementById('mm-result').classList.remove('hidden');
         }
 
