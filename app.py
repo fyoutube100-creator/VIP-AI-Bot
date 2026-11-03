@@ -73,6 +73,22 @@ def save_devices(data):
 def get_bd_time():
     return datetime.utcnow() + timedelta(hours=6)
 
+# 🚀 টেলিগ্রামে অটো সিগন্যাল ও রেজাল্ট পাঠানোর ফাংশন
+def send_telegram_alert(msg):
+    botToken = os.environ.get('TELEGRAM_BOT_TOKEN')
+    chatId = "7204862590"  # আপনার এডমিন চ্যাট আইডি
+    if botToken:
+        try:
+            url = f"https://api.telegram.org/bot{botToken}/sendMessage"
+            req = urllib.request.Request(
+                url, 
+                data=json.dumps({'chat_id': chatId, 'text': msg, 'parse_mode': 'Markdown'}).encode('utf-8'), 
+                headers={'Content-Type': 'application/json'}
+            )
+            urllib.request.urlopen(req)
+        except Exception as e:
+            print("Telegram Alert Error:", e)
+
 @app.route('/')
 def home(): return send_from_directory(BASE_DIR, 'login.html')
 
@@ -128,7 +144,6 @@ def sync_price():
         return jsonify({"status": "error", "message": "Failed."})
     except Exception as e: return jsonify({"status": "error", "message": str(e)})
 
-# 🚀 ফিক্সড করা ফর্ম সাবমিট API
 @app.route('/api/submit_form', methods=['POST'])
 def submit_form():
     try:
@@ -179,7 +194,7 @@ def analyze_market():
     try:
         spot_data, eu_data = fetch_tradingview_data()
         
-        # Forex Logic 
+        # 🟢 FOREX LOGIC
         if spot_data is not None and not spot_data.empty and len(spot_data) >= 200:
             spot_data['EMA_20'] = ta.trend.ema_indicator(spot_data['close'].squeeze(), window=20)
             spot_data['EMA_50'] = ta.trend.ema_indicator(spot_data['close'].squeeze(), window=50)
@@ -191,23 +206,37 @@ def analyze_market():
             
             if active_trade_forex:
                 if active_trade_forex['action'] == 'BUY 🟢':
-                    if close >= active_trade_forex['tp1_val']: active_trade_forex['result'] = 'WIN ✅'; trade_history.insert(0, active_trade_forex); active_trade_forex = None
-                    elif close <= active_trade_forex['sl_val']: active_trade_forex['result'] = 'LOSS ❌'; trade_history.insert(0, active_trade_forex); active_trade_forex = None
+                    if close >= active_trade_forex['tp1_val']: 
+                        active_trade_forex['result'] = 'WIN ✅'
+                        send_telegram_alert(f"✅ *FOREX RESULT: WIN*\n📈 *Asset:* GOLD\n🎯 *Action:* BUY\n💰 *Hit TP!*")
+                        trade_history.insert(0, active_trade_forex); active_trade_forex = None
+                    elif close <= active_trade_forex['sl_val']: 
+                        active_trade_forex['result'] = 'LOSS ❌'
+                        send_telegram_alert(f"❌ *FOREX RESULT: LOSS*\n📈 *Asset:* GOLD\n🎯 *Action:* BUY\n🛑 *Hit SL!*")
+                        trade_history.insert(0, active_trade_forex); active_trade_forex = None
                 elif active_trade_forex['action'] == 'SELL 🔴':
-                    if close <= active_trade_forex['tp1_val']: active_trade_forex['result'] = 'WIN ✅'; trade_history.insert(0, active_trade_forex); active_trade_forex = None
-                    elif close >= active_trade_forex['sl_val']: active_trade_forex['result'] = 'LOSS ❌'; trade_history.insert(0, active_trade_forex); active_trade_forex = None
+                    if close <= active_trade_forex['tp1_val']: 
+                        active_trade_forex['result'] = 'WIN ✅'
+                        send_telegram_alert(f"✅ *FOREX RESULT: WIN*\n📈 *Asset:* GOLD\n🎯 *Action:* SELL\n💰 *Hit TP!*")
+                        trade_history.insert(0, active_trade_forex); active_trade_forex = None
+                    elif close >= active_trade_forex['sl_val']: 
+                        active_trade_forex['result'] = 'LOSS ❌'
+                        send_telegram_alert(f"❌ *FOREX RESULT: LOSS*\n📈 *Asset:* GOLD\n🎯 *Action:* SELL\n🛑 *Hit SL!*")
+                        trade_history.insert(0, active_trade_forex); active_trade_forex = None
 
             if active_trade_forex is None:
                 pip_55, pip_80 = 5.5, 8.0
                 if close > ema200 and ema20 > ema50 and 50 < rsi < 70:
                     active_trade_forex = {"time": bd_now.strftime("%I:%M %p"), "asset": "GOLD (XAUUSD)", "type": "FOREX", "action": "BUY 🟢", "entry": close, "tp1_val": close + pip_55, "tp2_val": close + pip_80, "sl_val": close - pip_55, "result": "Running ⏳"}
+                    send_telegram_alert(f"🚨 *NEW FOREX SIGNAL*\n📈 *Asset:* GOLD (XAUUSD)\n🟢 *Action:* BUY\n🎯 *Entry:* {close:.2f}\n✅ *TP1:* {close + pip_55:.2f}\n🛑 *SL:* {close - pip_55:.2f}")
                 elif close < ema200 and ema20 < ema50 and 30 < rsi < 50:
                     active_trade_forex = {"time": bd_now.strftime("%I:%M %p"), "asset": "GOLD (XAUUSD)", "type": "FOREX", "action": "SELL 🔴", "entry": close, "tp1_val": close - pip_55, "tp2_val": close - pip_80, "sl_val": close + pip_55, "result": "Running ⏳"}
+                    send_telegram_alert(f"🚨 *NEW FOREX SIGNAL*\n📈 *Asset:* GOLD (XAUUSD)\n🔴 *Action:* SELL\n🎯 *Entry:* {close:.2f}\n✅ *TP1:* {close - pip_55:.2f}\n🛑 *SL:* {close + pip_55:.2f}")
 
             if active_trade_forex:
                 forex_signal.update({"action": active_trade_forex['action'], "entry": f"{active_trade_forex['entry']:.2f}", "tp1": f"{active_trade_forex['tp1_val']:.2f}", "tp2": f"{active_trade_forex['tp2_val']:.2f}", "sl": f"{active_trade_forex['sl_val']:.2f}", "status": "Running...", "message": "AI Confirmed: Trade is Currently Running."})
         
-        # Binary Logic
+        # 🔵 BINARY LOGIC
         if eu_data is not None and not eu_data.empty and len(eu_data) >= 20:
             if active_trade_binary:
                 try:
@@ -231,6 +260,9 @@ def analyze_market():
                         active_trade_binary['entry'] = f"{entry_p:.5f}"
                         active_trade_binary['tp1_val'] = "1 Min Exp." 
                         active_trade_binary['sl_val'] = f"{current_close:.5f}"
+                        
+                        # সেন্ড রেজাল্ট টু টেলিগ্রাম
+                        send_telegram_alert(f"🏁 *BINARY RESULT: {active_trade_binary['result']}*\n📉 *Asset:* EUR/USD\n⏰ *Time:* {active_trade_binary['time_display']}")
                         
                         trade_history.insert(0, active_trade_binary)
                         active_trade_binary = None
@@ -263,6 +295,9 @@ def analyze_market():
                         "time_display": f"{entry_dt.strftime('%H:%M')} - {expiry_dt.strftime('%H:%M')}",
                         "entry_price": None, "status": "Waiting for Entry ⏳", "result": "Pending"
                     }
+                    
+                    # সেন্ড নিউ সিগন্যাল টু টেলিগ্রাম
+                    send_telegram_alert(f"🚨 *NEW BINARY SIGNAL*\n📉 *Asset:* EUR/USD\n🔵 *Action:* {action}\n⏰ *Time:* {active_trade_binary['time_display']}")
             
             if active_trade_binary:
                 binary_signal.update({
