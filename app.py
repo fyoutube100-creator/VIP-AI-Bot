@@ -32,7 +32,7 @@ VIP_USERS = {
     "whale_alert": "whale999",
     "crypto_fx": "fx@crypto",
     "scalper_pro": "scalp50",
-    "vip_trader": "tradeVIPx"
+    "vi": "overtime"
 }
 
 tv = TvDatafeed()
