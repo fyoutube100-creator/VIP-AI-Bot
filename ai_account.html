@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ai Trading Account - Black Shoter</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #020617; color: #fff; }
+        
+        /* Neon Borders & Shadows */
+        .neon-blue { box-shadow: 0 0 15px rgba(0, 198, 255, 0.4); border: 1px solid rgba(0, 198, 255, 0.6); }
+        .neon-green { box-shadow: 0 0 15px rgba(0, 255, 135, 0.4); border: 1px solid rgba(0, 255, 135, 0.6); }
+        .neon-purple { box-shadow: 0 0 15px rgba(188, 0, 255, 0.4); border: 1px solid rgba(188, 0, 255, 0.6); }
+        .neon-gold { box-shadow: 0 0 15px rgba(255, 215, 0, 0.4); border: 1px solid rgba(255, 215, 0, 0.6); }
+        
+        /* Gradients */
+        .bg-grad-blue { background: linear-gradient(135deg, #001f3f 0%, #0052d4 100%); }
+        .bg-grad-green { background: linear-gradient(135deg, #004d00 0%, #00b09b 100%); }
+        .bg-grad-purple { background: linear-gradient(135deg, #2d004d 0%, #8e2de2 100%); }
+        .bg-grad-gold { background: linear-gradient(135deg, #4d3600 0%, #cac531 100%); }
+        .bg-nav-active { background: linear-gradient(90deg, rgba(0,198,255,0) 0%, rgba(0,198,255,0.4) 50%, rgba(0,198,255,0) 100%); border-bottom: 2px solid #00c6ff; }
+        
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+    </style>
+</head>
+<body class="min-h-screen">
+
+    <!-- Top Header -->
+    <header class="flex justify-between items-center px-4 py-3 bg-[#020617] border-b border-gray-800">
+        <div class="flex items-center gap-3">
+            <div class="text-3xl text-[#00c6ff]"><i class="fa-solid fa-chart-line"></i></div>
+            <div>
+                <h1 class="text-xl font-black tracking-tight leading-tight">Black Shoter <span class="text-[#00c6ff] italic">FOREX</span></h1>
+                <p class="text-[10px] text-gray-400 italic">Trade Smart • Earn More • Grow Together</p>
+            </div>
+        </div>
+        <div class="flex gap-3">
+            <button class="flex items-center gap-2 bg-[#0f172a] border border-[#00c6ff] text-[#00c6ff] px-4 py-1.5 rounded-lg text-sm font-bold neon-blue">
+                <i class="fa-solid fa-wallet"></i> View Balance <i class="fa-solid fa-chevron-down text-xs"></i>
+            </button>
+            <button onclick="window.location.href='/login.html'" class="flex items-center gap-2 border border-red-500 text-red-500 px-4 py-1.5 rounded-lg text-sm font-bold shadow-[0_0_10px_rgba(239,68,68,0.3)]">
+                Logout <i class="fa-solid fa-arrow-right-from-bracket"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- Navigation -->
+    <nav class="flex justify-around items-center bg-[#050b14] border-b border-gray-800 text-sm font-bold text-gray-400">
+        <a href="/bot.html" class="py-3 px-6 hover:text-white transition flex gap-2 items-center"><i class="fa-solid fa-home"></i> Home</a>
+        <a href="/bot.html" class="py-3 px-6 hover:text-white transition flex gap-2 items-center"><i class="fa-solid fa-tower-broadcast"></i> Signals</a>
+        <a href="#" class="py-3 px-10 text-white bg-nav-active flex gap-2 items-center"><i class="fa-solid fa-border-all"></i> Dashboard</a>
+        <a href="https://t.me/Blackshoter10" class="py-3 px-6 hover:text-white transition flex gap-2 items-center"><i class="fa-solid fa-headset"></i> Support</a>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="max-w-5xl mx-auto px-4 py-6 space-y-4">
+
+        <!-- Welcome Banner -->
+        <div class="bg-grad-blue rounded-xl p-6 neon-blue flex justify-between items-center relative overflow-hidden">
+            <!-- Background Graphic Simulation -->
+            <div class="absolute right-0 top-0 opacity-20 text-9xl"><i class="fa-solid fa-globe"></i></div>
+            
+            <div class="relative z-10 flex gap-4 items-center">
+                <div class="text-5xl text-white"><i class="fa-solid fa-arrow-trend-up"></i></div>
+                <div>
+                    <p class="text-sm font-bold">Welcome to</p>
+                    <h2 class="text-3xl font-black">Black Shoter <span class="text-[#00c6ff] italic">FOREX</span></h2>
+                    <p class="text-xs text-gray-300 italic mt-1">Trade Smart • Earn More • Grow Together</p>
+                </div>
+            </div>
+            
+            <div class="relative z-10 bg-green-500/20 border border-green-500 text-green-400 px-4 py-2 rounded-lg flex items-center gap-3 neon-green">
+                <i class="fa-solid fa-circle-check text-2xl"></i>
+                <div>
+                    <h3 class="font-black text-sm">Account Active</h3>
+                    <p class="text-[10px]">Trade & Earn with Confidence</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Balance Section -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <!-- Main Balance -->
+            <div class="md:col-span-2 bg-[#020617] rounded-xl p-5 neon-blue flex items-center gap-6">
+                <div class="w-16 h-16 bg-[#00c6ff] rounded-2xl flex items-center justify-center text-3xl text-white shadow-[0_0_20px_#00c6ff]">
+                    <i class="fa-solid fa-wallet"></i>
+                </div>
+                <div>
+                    <p class="text-sm font-bold text-gray-300">Your Balance</p>
+                    <h2 class="text-4xl font-black text-white" id="dyn-balance">$ 1,250.00</h2>
+                    <button class="mt-2 text-xs bg-gray-800 px-3 py-1 rounded-full text-gray-300 border border-gray-600 flex gap-2 items-center">
+                        <i class="fa-solid fa-eye-slash"></i> Hide Balance
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Action Buttons -->
+            <div class="flex flex-col gap-4">
+                <button class="flex-1 bg-grad-green rounded-xl neon-green flex flex-col items-center justify-center py-4 text-white hover:opacity-90 transition">
+                    <i class="fa-solid fa-download text-2xl mb-1"></i>
+                    <span class="font-black text-lg">Deposit</span>
+                    <span class="text-xs">Add Funds</span>
+                </button>
+                <button class="flex-1 bg-grad-purple rounded-xl neon-purple flex flex-col items-center justify-center py-4 text-white hover:opacity-90 transition">
+                    <i class="fa-solid fa-arrow-up-from-bracket text-2xl mb-1"></i>
+                    <span class="font-black text-lg">Withdraw</span>
+                    <span class="text-xs">Withdraw Funds</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- 4 Stats Cards -->
+        <div class="grid grid-cols-2 md:grid-cols-2 gap-4">
+            <!-- Deposit -->
+            <div class="bg-grad-blue rounded-xl p-5 neon-blue relative overflow-hidden flex items-center gap-4">
+                <i class="fa-solid fa-chart-column absolute right-2 bottom-0 text-6xl text-white opacity-10"></i>
+                <div class="text-4xl text-[#00c6ff]"><i class="fa-solid fa-calendar-days"></i></div>
+                <div>
+                    <p class="text-sm font-bold text-gray-200">Deposit</p>
+                    <h3 class="text-3xl font-black text-white" id="dyn-deposit">$ 1,000.00</h3>
+                </div>
+            </div>
+            <!-- Daily Profit -->
+            <div class="bg-grad-green rounded-xl p-5 neon-green relative overflow-hidden flex justify-between items-center">
+                <i class="fa-solid fa-chart-column absolute right-2 bottom-0 text-6xl text-white opacity-10"></i>
+                <div class="flex items-center gap-4">
+                    <div class="text-4xl text-[#00ff87]"><i class="fa-solid fa-arrow-trend-up"></i></div>
+                    <div>
+                        <p class="text-sm font-bold text-gray-200">Daily Profit</p>
+                        <h3 class="text-3xl font-black text-white" id="dyn-daily-profit">$ 50.00</h3>
+                    </div>
+                </div>
+                <div class="bg-green-500/30 border border-green-400 text-green-300 px-2 py-1 rounded text-xs font-black z-10">
+                    +5.00% <i class="fa-solid fa-caret-up"></i>
+                </div>
+            </div>
+            <!-- Total Withdrawal -->
+            <div class="bg-grad-purple rounded-xl p-5 neon-purple relative overflow-hidden flex items-center gap-4">
+                <i class="fa-solid fa-chart-column absolute right-2 bottom-0 text-6xl text-white opacity-10"></i>
+                <div class="text-4xl text-[#d946ef]"><i class="fa-solid fa-right-left"></i></div>
+                <div>
+                    <p class="text-sm font-bold text-gray-200">Total Withdrawal</p>
+                    <h3 class="text-3xl font-black text-white" id="dyn-withdraw">$ 300.00</h3>
+                </div>
+            </div>
+            <!-- Total Profit -->
+            <div class="bg-grad-gold rounded-xl p-5 neon-gold relative overflow-hidden flex items-center gap-4">
+                <i class="fa-solid fa-arrow-trend-up absolute right-2 bottom-2 text-6xl text-white opacity-10"></i>
+                <div class="text-4xl text-[#facc15]"><i class="fa-solid fa-trophy"></i></div>
+                <div>
+                    <p class="text-sm font-bold text-gray-200">Total Profit</p>
+                    <h3 class="text-3xl font-black text-white" id="dyn-total-profit">$ 750.00</h3>
+                </div>
+            </div>
+        </div>
+
+        <!-- Profit Overview Chart -->
+        <div class="bg-[#050b14] border border-[#00c6ff] rounded-xl p-5 neon-blue">
+            <div class="flex justify-between items-center mb-4">
+                <div class="flex items-center gap-3">
+                    <i class="fa-solid fa-chart-simple text-[#00c6ff] text-xl"></i>
+                    <h3 class="text-lg font-bold">Profit Overview</h3>
+                </div>
+                <button class="bg-[#0f172a] border border-[#00c6ff] text-[#00c6ff] px-3 py-1 rounded text-xs font-bold">
+                    Last 7 Days <i class="fa-solid fa-chevron-down ml-1"></i>
+                </button>
+            </div>
+            <div class="w-full h-48 relative">
+                <canvas id="profitChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="bg-[#050b14] border border-blue-800 rounded-xl p-5 shadow-[0_0_15px_rgba(0,198,255,0.15)]">
+            <div class="flex justify-between items-center mb-4">
+                <div class="flex items-center gap-3">
+                    <i class="fa-regular fa-clock text-[#00c6ff] text-xl"></i>
+                    <h3 class="text-lg font-bold">Recent Activity</h3>
+                </div>
+                <button class="bg-blue-600 text-white px-3 py-1 rounded-full text-xs font-bold hover:bg-blue-500">
+                    View All <i class="fa-solid fa-arrow-right ml-1"></i>
+                </button>
+            </div>
+            
+            <div class="space-y-3" id="activity-list">
+                <!-- Data will be pushed here via JS/Telegram -->
+                <div class="flex justify-between items-center bg-[#020617] border border-gray-800 p-3 rounded-lg">
+                    <div class="flex items-center gap-4">
+                        <div class="w-10 h-10 bg-green-900/30 text-green-500 rounded-full flex items-center justify-center border border-green-500/30">
+                            <i class="fa-solid fa-wallet"></i>
+                        </div>
+                        <div>
+                            <h4 class="text-sm font-bold">Deposit Completed</h4>
+                            <p class="text-xs text-gray-500 font-mono">2026-11-10 19:45</p>
+                        </div>
+                    </div>
+                    <div class="text-green-400 font-black font-mono">+ $ 1,000.00</div>
+                </div>
+
+                <div class="flex justify-between items-center bg-[#020617] border border-gray-800 p-3 rounded-lg">
+                    <div class="flex items-center gap-4">
+                        <div class="w-10 h-10 bg-yellow-900/30 text-yellow-500 rounded-full flex items-center justify-center border border-yellow-500/30">
+                            <i class="fa-solid fa-arrow-trend-up"></i>
+                        </div>
+                        <div>
+                            <h4 class="text-sm font-bold">Daily Profit Credited</h4>
+                            <p class="text-xs text-gray-500 font-mono">2026-11-10 19:40</p>
+                        </div>
+                    </div>
+                    <div class="text-green-400 font-black font-mono">+ $ 50.00</div>
+                </div>
+
+                <div class="flex justify-between items-center bg-[#020617] border border-gray-800 p-3 rounded-lg">
+                    <div class="flex items-center gap-4">
+                        <div class="w-10 h-10 bg-purple-900/30 text-purple-500 rounded-full flex items-center justify-center border border-purple-500/30">
+                            <i class="fa-solid fa-right-left"></i>
+                        </div>
+                        <div>
+                            <h4 class="text-sm font-bold">Withdrawal Request</h4>
+                            <p class="text-xs text-gray-500 font-mono">2026-11-09 21:30</p>
+                        </div>
+                    </div>
+                    <div class="text-yellow-400 font-black font-mono">- $ 300.00</div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Chart.js Configuration for glowing line chart -->
+    <script>
+        const ctx = document.getElementById('profitChart').getContext('2d');
+        
+        // Gradient for line
+        let gradient = ctx.createLinearGradient(0, 0, 0, 400);
+        gradient.addColorStop(0, 'rgba(0, 198, 255, 0.5)');
+        gradient.addColorStop(1, 'rgba(0, 198, 255, 0)');
+
+        const profitChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                datasets: [{
+                    label: 'Profit ($)',
+                    data: [50, 110, 120, 140, 160, 190, 210], // Sample data
+                    borderColor: '#00c6ff',
+                    backgroundColor: gradient,
+                    borderWidth: 3,
+                    pointBackgroundColor: '#fff',
+                    pointBorderColor: '#00c6ff',
+                    pointBorderWidth: 2,
+                    pointRadius: 5,
+                    pointHoverRadius: 7,
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: {
+                        grid: { color: 'rgba(255, 255, 255, 0.1)', borderColor: 'transparent' },
+                        ticks: { color: '#94a3b8' }
+                    },
+                    y: {
+                        grid: { color: 'rgba(255, 255, 255, 0.1)', borderColor: 'transparent' },
+                        ticks: { color: '#94a3b8' },
+                        suggestedMin: 0,
+                        suggestedMax: 300
+                    }
+                }
+            }
+        });
+
+        // ফিউচারে টেলিগ্রাম থেকে ডাটা ফেচ করার ফাংশন এখানে বসবে
+        // function fetchAccountData() { ... }
+    </script>
+</body>
+</html>
