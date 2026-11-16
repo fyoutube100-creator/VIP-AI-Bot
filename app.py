@@ -32,7 +32,7 @@ VIP_USERS = {
     "whale_alert": "whale999",
     "crypto_fx": "fx@crypto",
     "scalper_pro": "scalp50",
-    "vi": "overtime"
+    "vi": "tIPx"
 }
 
 tv = TvDatafeed()
@@ -73,10 +73,9 @@ def save_devices(data):
 def get_bd_time():
     return datetime.utcnow() + timedelta(hours=6)
 
-# টেলিগ্রামে অটো সিগন্যাল ও রেজাল্ট পাঠানোর ফাংশন
 def send_telegram_alert(msg):
     botToken = os.environ.get('TELEGRAM_BOT_TOKEN')
-    chatId = "7204862590"  # এডমিন চ্যাট আইডি
+    chatId = "7204862590"
     if botToken:
         try:
             url = f"https://api.telegram.org/bot{botToken}/sendMessage"
@@ -97,6 +96,10 @@ def bot_dashboard(): return send_from_directory(BASE_DIR, 'bot.html')
 
 @app.route('/login.html')
 def login_page(): return send_from_directory(BASE_DIR, 'login.html')
+
+# 🚀 নতুন Ai Trading Account পেজের রুট
+@app.route('/ai_account.html')
+def ai_account_page(): return send_from_directory(BASE_DIR, 'ai_account.html')
 
 @app.route('/api/login', methods=['POST'])
 def login_api():
@@ -194,8 +197,7 @@ def analyze_market():
     try:
         spot_data, eu_data = fetch_tradingview_data()
         
-        # 🟢 FOREX LOGIC FIXES
-        forex_closed_now = False # ওভারল্যাপিং বন্ধ করার জন্য ফ্ল্যাগ
+        forex_closed_now = False 
         
         if spot_data is not None and not spot_data.empty and len(spot_data) >= 200:
             spot_data['EMA_20'] = ta.trend.ema_indicator(spot_data['close'].squeeze(), window=20)
@@ -234,10 +236,8 @@ def analyze_market():
                         active_trade_forex = None
                         forex_closed_now = True
 
-            # যদি এইমাত্র ট্রেড ক্লোজ না হয়ে থাকে, তবেই নতুন সিগন্যাল চেক করবে
             if active_trade_forex is None and not forex_closed_now:
                 pip_55, pip_80 = 5.5, 8.0
-                # একুরেসি বাড়ানোর জন্য লজিক হার্ড করা হলো
                 if close > ema20 and ema20 > ema50 and ema50 > ema200 and 55 < rsi < 75:
                     active_trade_forex = {"time": bd_now.strftime("%I:%M %p"), "asset": "GOLD (XAUUSD)", "type": "FOREX", "action": "BUY 🟢", "entry": close, "tp1_val": close + pip_55, "tp2_val": close + pip_80, "sl_val": close - pip_55, "result": "Running ⏳"}
                     send_telegram_alert(f"🚨 *NEW FOREX SIGNAL*\n📈 *Asset:* GOLD (XAUUSD)\n🟢 *Action:* BUY\n🎯 *Entry:* {close:.2f}\n✅ *TP1:* {close + pip_55:.2f}\n🛑 *SL:* {close - pip_55:.2f}")
@@ -248,8 +248,7 @@ def analyze_market():
             if active_trade_forex:
                 forex_signal.update({"action": active_trade_forex['action'], "entry": f"{active_trade_forex['entry']:.2f}", "tp1": f"{active_trade_forex['tp1_val']:.2f}", "tp2": f"{active_trade_forex['tp2_val']:.2f}", "sl": f"{active_trade_forex['sl_val']:.2f}", "status": "Running...", "message": "AI Confirmed: Trade is Currently Running."})
         
-        # 🔵 BINARY LOGIC FIXES
-        binary_closed_now = False # ওভারল্যাপিং বন্ধ করার জন্য ফ্ল্যাগ
+        binary_closed_now = False 
         
         if eu_data is not None and not eu_data.empty and len(eu_data) >= 20:
             if active_trade_binary:
@@ -282,7 +281,6 @@ def analyze_market():
                         binary_closed_now = True
                 except Exception as e: print("Bin Result Error:", e); active_trade_binary = None
                     
-            # যদি এইমাত্র ট্রেড ক্লোজ না হয়ে থাকে, তবেই নতুন সিগন্যাল চেক করবে
             if active_trade_binary is None and not binary_closed_now:
                 eu_data['RSI'] = ta.momentum.rsi(eu_data['close'].squeeze(), window=14)
                 indicator_bb = ta.volatility.BollingerBands(close=eu_data['close'].squeeze(), window=20, window_dev=2)
@@ -295,7 +293,6 @@ def analyze_market():
                 bb_up = float(eu_data.iloc[-1]['BB_upper'])
                 
                 action = None
-                # একুরেসি বাড়ানোর জন্য RSI লেভেল হার্ড করা হলো
                 if eu_rsi < 25 and eu_close <= bb_low: action = "CALL 🟢"
                 elif eu_rsi > 75 and eu_close >= bb_up: action = "PUT 🔴"
                     
