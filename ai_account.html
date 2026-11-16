@@ -24,14 +24,60 @@
 <body class="min-h-screen">
     
     <script>
-        // ইউজারনেম সেভ করে রাখা হচ্ছে যাতে যার যার নিজের ডাটা পায়
         if (!localStorage.getItem('username')) {
             let user = prompt("Please confirm your Username to load your Dashboard:");
             if(user) localStorage.setItem('username', user);
         }
+
+        // 🚀 সেকশন পরিবর্তনের স্ক্রিপ্ট
+        function showSection(sectionId) {
+            document.getElementById('main-dashboard').classList.add('hidden');
+            document.getElementById('deposit-section').classList.add('hidden');
+            document.getElementById('withdraw-section').classList.add('hidden');
+            document.getElementById(sectionId).classList.remove('hidden');
+        }
+
+        function copyAddress() {
+            var copyText = document.getElementById("crypto-address");
+            copyText.select();
+            copyText.setSelectionRange(0, 99999);
+            navigator.clipboard.writeText(copyText.value);
+            alert("Deposit Address Copied!");
+        }
+
+        function requestWithdrawal() {
+            const method = document.getElementById('withdraw-method').innerText;
+            const wallet = document.getElementById('withdraw-wallet').value;
+            const amount = document.getElementById('withdraw-amount').value;
+            const username = localStorage.getItem('username') || "Unknown User";
+
+            if(!wallet || !amount || amount < 10) {
+                alert("Please enter a valid wallet address and amount (Min $10).");
+                return;
+            }
+
+            const msg = `💸 *NEW WITHDRAWAL REQUEST*\n\n👤 *User:* ${username}\n🏦 *Method:* ${method}\n💳 *Wallet/ID:* ${wallet}\n💰 *Amount:* $${amount}`;
+
+            document.getElementById('withdraw-btn').innerText = "Processing...";
+            
+            fetch('/api/submit_form', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({message: msg})
+            }).then(res => res.json()).then(data => {
+                alert("Withdrawal Request Sent Successfully!");
+                document.getElementById('withdraw-wallet').value = '';
+                document.getElementById('withdraw-amount').value = '';
+                document.getElementById('withdraw-btn').innerHTML = '<i class="fa-solid fa-paper-plane"></i> Request Withdrawal';
+                showSection('main-dashboard');
+            }).catch(err => {
+                alert("Network Error!");
+                document.getElementById('withdraw-btn').innerHTML = '<i class="fa-solid fa-paper-plane"></i> Request Withdrawal';
+            });
+        }
     </script>
 
-    <header class="flex justify-between items-center px-4 py-3 bg-[#020617] border-b border-gray-800">
+    <header class="flex justify-between items-center px-4 py-3 bg-[#020617] border-b border-gray-800 sticky top-0 z-50">
         <div class="flex items-center gap-3">
             <div class="text-3xl text-[#00c6ff]"><i class="fa-solid fa-chart-line"></i></div>
             <div>
@@ -39,106 +85,212 @@
                 <p class="text-[10px] text-gray-400 italic">Trade Smart • Earn More • Grow Together</p>
             </div>
         </div>
-        <div class="flex gap-3">
-            <button class="flex items-center gap-2 bg-[#0f172a] border border-[#00c6ff] text-[#00c6ff] px-4 py-1.5 rounded-lg text-sm font-bold neon-blue">
-                <i class="fa-solid fa-wallet"></i> View Balance <i class="fa-solid fa-chevron-down text-xs"></i>
-            </button>
-            <button onclick="localStorage.removeItem('is_logged_in'); localStorage.removeItem('username'); window.location.href='/login.html'" class="flex items-center gap-2 border border-red-500 text-red-500 px-4 py-1.5 rounded-lg text-sm font-bold shadow-[0_0_10px_rgba(239,68,68,0.3)]">
+        <div class="flex gap-2">
+            <button onclick="localStorage.removeItem('is_logged_in'); localStorage.removeItem('username'); window.location.href='/login.html'" class="flex items-center gap-2 border border-red-500 text-red-500 px-3 py-1.5 rounded-lg text-xs font-bold shadow-[0_0_10px_rgba(239,68,68,0.3)]">
                 Logout <i class="fa-solid fa-arrow-right-from-bracket"></i>
             </button>
         </div>
     </header>
 
-    <nav class="flex justify-around items-center bg-[#050b14] border-b border-gray-800 text-sm font-bold text-gray-400">
-        <a href="/bot.html" class="py-3 px-6 hover:text-white transition flex gap-2 items-center"><i class="fa-solid fa-home"></i> Home</a>
-        <a href="/bot.html" class="py-3 px-6 hover:text-white transition flex gap-2 items-center"><i class="fa-solid fa-tower-broadcast"></i> Signals</a>
-        <a href="#" class="py-3 px-10 text-white bg-nav-active flex gap-2 items-center"><i class="fa-solid fa-border-all"></i> Dashboard</a>
-        <a href="https://t.me/Blackshoter10" class="py-3 px-6 hover:text-white transition flex gap-2 items-center"><i class="fa-solid fa-headset"></i> Support</a>
+    <nav class="flex justify-around items-center bg-[#050b14] border-b border-gray-800 text-xs md:text-sm font-bold text-gray-400 sticky top-[60px] z-40">
+        <a href="/bot.html" class="py-3 px-4 hover:text-white transition flex gap-2 items-center"><i class="fa-solid fa-home"></i> <span class="hidden md:inline">Home</span></a>
+        <a href="#" onclick="showSection('main-dashboard')" class="py-3 px-4 text-[#00c6ff] border-b-2 border-[#00c6ff] bg-nav-active flex gap-2 items-center"><i class="fa-solid fa-border-all"></i> Dashboard</a>
+        <button onclick="showSection('deposit-section')" class="py-3 px-4 hover:text-[#00ff87] transition flex gap-2 items-center"><i class="fa-solid fa-download"></i> Deposit</button>
+        <button onclick="showSection('withdraw-section')" class="py-3 px-4 hover:text-[#d946ef] transition flex gap-2 items-center"><i class="fa-solid fa-arrow-up-from-bracket"></i> Withdraw</button>
     </nav>
 
     <main class="max-w-5xl mx-auto px-4 py-6 space-y-4">
         
-        <div class="bg-grad-blue rounded-xl p-6 neon-blue flex justify-between items-center relative overflow-hidden">
-            <div class="absolute right-0 top-0 opacity-20 text-9xl"><i class="fa-solid fa-globe"></i></div>
-            <div class="relative z-10 flex gap-4 items-center">
-                <div class="text-5xl text-white"><i class="fa-solid fa-user-shield"></i></div>
-                <div>
-                    <p class="text-sm font-bold">Welcome Back,</p>
-                    <h2 class="text-3xl font-black text-[#00c6ff]" id="user-display-name">Trader</h2>
+        <!-- 🎯 MAIN DASHBOARD SECTION -->
+        <div id="main-dashboard" class="block space-y-4">
+            <div class="bg-grad-blue rounded-xl p-6 neon-blue flex justify-between items-center relative overflow-hidden">
+                <div class="absolute right-0 top-0 opacity-20 text-9xl"><i class="fa-solid fa-globe"></i></div>
+                <div class="relative z-10 flex gap-4 items-center">
+                    <div class="text-5xl text-white"><i class="fa-solid fa-user-shield"></i></div>
+                    <div>
+                        <p class="text-sm font-bold">Welcome Back,</p>
+                        <h2 class="text-3xl font-black text-[#00c6ff]" id="user-display-name">Trader</h2>
+                    </div>
+                </div>
+                <div class="relative z-10 bg-green-500/20 border border-green-500 text-green-400 px-4 py-2 rounded-lg flex items-center gap-3 neon-green">
+                    <i class="fa-solid fa-circle-check text-2xl"></i>
+                    <div>
+                        <h3 class="font-black text-sm">Account Active</h3>
+                        <p class="text-[10px]">Trade & Earn with Confidence</p>
+                    </div>
                 </div>
             </div>
-            <div class="relative z-10 bg-green-500/20 border border-green-500 text-green-400 px-4 py-2 rounded-lg flex items-center gap-3 neon-green">
-                <i class="fa-solid fa-circle-check text-2xl"></i>
-                <div>
-                    <h3 class="font-black text-sm">Account Active</h3>
-                    <p class="text-[10px]">Trade & Earn with Confidence</p>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="md:col-span-2 bg-[#020617] rounded-xl p-5 neon-blue flex items-center gap-6">
+                    <div class="w-16 h-16 bg-[#00c6ff] rounded-2xl flex items-center justify-center text-3xl text-white shadow-[0_0_20px_#00c6ff]">
+                        <i class="fa-solid fa-wallet"></i>
+                    </div>
+                    <div>
+                        <p class="text-sm font-bold text-gray-300">Your Balance</p>
+                        <h2 class="text-4xl font-black text-white" id="dyn-balance">$ 0.00</h2>
+                    </div>
+                </div>
+                
+                <div class="flex flex-col gap-4">
+                    <button onclick="showSection('deposit-section')" class="flex-1 bg-grad-green rounded-xl neon-green flex flex-col items-center justify-center py-4 text-white hover:opacity-90 transition">
+                        <i class="fa-solid fa-download text-2xl mb-1"></i>
+                        <span class="font-black text-lg">Deposit</span>
+                    </button>
+                    <button onclick="showSection('withdraw-section')" class="flex-1 bg-grad-purple rounded-xl neon-purple flex flex-col items-center justify-center py-4 text-white hover:opacity-90 transition">
+                        <i class="fa-solid fa-arrow-up-from-bracket text-2xl mb-1"></i>
+                        <span class="font-black text-lg">Withdraw</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 md:grid-cols-2 gap-4">
+                <div class="bg-grad-blue rounded-xl p-5 neon-blue relative overflow-hidden flex items-center gap-4">
+                    <i class="fa-solid fa-chart-column absolute right-2 bottom-0 text-6xl text-white opacity-10"></i>
+                    <div class="text-4xl text-[#00c6ff]"><i class="fa-solid fa-calendar-days"></i></div>
+                    <div>
+                        <p class="text-sm font-bold text-gray-200">Deposit</p>
+                        <h3 class="text-3xl font-black text-white" id="dyn-deposit">$ 0.00</h3>
+                    </div>
+                </div>
+                <div class="bg-grad-green rounded-xl p-5 neon-green relative overflow-hidden flex justify-between items-center">
+                    <i class="fa-solid fa-chart-column absolute right-2 bottom-0 text-6xl text-white opacity-10"></i>
+                    <div class="flex items-center gap-4">
+                        <div class="text-4xl text-[#00ff87]"><i class="fa-solid fa-arrow-trend-up"></i></div>
+                        <div>
+                            <p class="text-sm font-bold text-gray-200">Daily Profit</p>
+                            <h3 class="text-3xl font-black text-white" id="dyn-daily-profit">$ 0.00</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-grad-purple rounded-xl p-5 neon-purple relative overflow-hidden flex items-center gap-4">
+                    <i class="fa-solid fa-chart-column absolute right-2 bottom-0 text-6xl text-white opacity-10"></i>
+                    <div class="text-4xl text-[#d946ef]"><i class="fa-solid fa-right-left"></i></div>
+                    <div>
+                        <p class="text-sm font-bold text-gray-200">Total Withdrawal</p>
+                        <h3 class="text-3xl font-black text-white" id="dyn-withdraw">$ 0.00</h3>
+                    </div>
+                </div>
+                <div class="bg-grad-gold rounded-xl p-5 neon-gold relative overflow-hidden flex items-center gap-4">
+                    <i class="fa-solid fa-arrow-trend-up absolute right-2 bottom-2 text-6xl text-white opacity-10"></i>
+                    <div class="text-4xl text-[#facc15]"><i class="fa-solid fa-trophy"></i></div>
+                    <div>
+                        <p class="text-sm font-bold text-gray-200">Total Profit</p>
+                        <h3 class="text-3xl font-black text-white" id="dyn-total-profit">$ 0.00</h3>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div class="md:col-span-2 bg-[#020617] rounded-xl p-5 neon-blue flex items-center gap-6">
+        <!-- 📥 DEPOSIT SECTION (NEW) -->
+        <div id="deposit-section" class="hidden space-y-4 animate-[fadeIn_0.3s_ease-in-out]">
+            <button onclick="showSection('main-dashboard')" class="text-[#00c6ff] text-sm hover:underline flex items-center gap-2 mb-2"><i class="fa-solid fa-arrow-left"></i> Back to Dashboard</button>
+            
+            <div class="bg-grad-blue rounded-xl p-6 neon-blue flex items-center gap-4">
                 <div class="w-16 h-16 bg-[#00c6ff] rounded-2xl flex items-center justify-center text-3xl text-white shadow-[0_0_20px_#00c6ff]">
                     <i class="fa-solid fa-wallet"></i>
                 </div>
                 <div>
-                    <p class="text-sm font-bold text-gray-300">Your Balance</p>
-                    <h2 class="text-4xl font-black text-white" id="dyn-balance">$ 0.00</h2>
+                    <h2 class="text-2xl font-black text-white">Deposit</h2>
+                    <p class="text-sm text-gray-300">Add funds to your account</p>
                 </div>
             </div>
-            
-            <div class="flex flex-col gap-4">
-                <button class="flex-1 bg-grad-green rounded-xl neon-green flex flex-col items-center justify-center py-4 text-white hover:opacity-90 transition">
-                    <i class="fa-solid fa-download text-2xl mb-1"></i>
-                    <span class="font-black text-lg">Deposit</span>
-                </button>
-                <button class="flex-1 bg-grad-purple rounded-xl neon-purple flex flex-col items-center justify-center py-4 text-white hover:opacity-90 transition">
-                    <i class="fa-solid fa-arrow-up-from-bracket text-2xl mb-1"></i>
-                    <span class="font-black text-lg">Withdraw</span>
-                </button>
-            </div>
-        </div>
 
-        <div class="grid grid-cols-2 md:grid-cols-2 gap-4">
-            <div class="bg-grad-blue rounded-xl p-5 neon-blue relative overflow-hidden flex items-center gap-4">
-                <i class="fa-solid fa-chart-column absolute right-2 bottom-0 text-6xl text-white opacity-10"></i>
-                <div class="text-4xl text-[#00c6ff]"><i class="fa-solid fa-calendar-days"></i></div>
-                <div>
-                    <p class="text-sm font-bold text-gray-200">Deposit</p>
-                    <h3 class="text-3xl font-black text-white" id="dyn-deposit">$ 0.00</h3>
-                </div>
+            <div class="bg-[#050b14] border border-blue-900 rounded-xl p-4 flex gap-4 items-start shadow-lg">
+                <i class="fa-solid fa-circle-info text-[#00c6ff] text-2xl mt-1"></i>
+                <p class="text-sm text-gray-300">Send <span class="font-bold text-[#00c6ff]">USDT (TRC20)</span> to the address below and wait for confirmation. Your deposit will be credited automatically.</p>
             </div>
-            <div class="bg-grad-green rounded-xl p-5 neon-green relative overflow-hidden flex justify-between items-center">
-                <i class="fa-solid fa-chart-column absolute right-2 bottom-0 text-6xl text-white opacity-10"></i>
-                <div class="flex items-center gap-4">
-                    <div class="text-4xl text-[#00ff87]"><i class="fa-solid fa-arrow-trend-up"></i></div>
-                    <div>
-                        <p class="text-sm font-bold text-gray-200">Daily Profit</p>
-                        <h3 class="text-3xl font-black text-white" id="dyn-daily-profit">$ 0.00</h3>
+
+            <div class="bg-[#050b14] border border-blue-900 rounded-xl p-6 flex flex-col items-center shadow-lg relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-32 h-32 bg-[#00c6ff] opacity-10 blur-3xl rounded-full"></div>
+                
+                <div class="w-full flex justify-between items-center mb-3">
+                    <span class="text-[#00c6ff] text-sm font-bold flex items-center gap-2"><i class="fa-solid fa-paper-plane"></i> TRC20 Deposit Address</span>
+                </div>
+                
+                <div class="w-full relative mb-8">
+                    <input type="text" id="crypto-address" value="TBah6sDqCdJneVTi8Qhiv4Qb7yAVoZvhJr" readonly class="w-full bg-[#020617] border border-dashed border-[#00c6ff] text-[#00c6ff] text-center py-4 rounded-xl font-mono text-sm tracking-widest outline-none shadow-[inset_0_0_10px_rgba(0,198,255,0.1)]">
+                    <button onclick="copyAddress()" class="absolute right-3 top-3 bg-[#0f172a] border border-[#00c6ff] text-[#00c6ff] px-4 py-1.5 rounded-lg hover:bg-[#00c6ff] hover:text-black font-bold transition flex items-center gap-2">
+                        <i class="fa-regular fa-copy"></i>
+                    </button>
+                </div>
+                
+                <div class="bg-white p-3 rounded-xl mb-6 shadow-[0_0_20px_rgba(255,255,255,0.1)]">
+                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=TBah6sDqCdJneVTi8Qhiv4Qb7yAVoZvhJr" alt="QR Code" class="w-44 h-44 rounded-lg">
+                </div>
+                
+                <div class="bg-green-500/10 border border-green-500 rounded-xl py-3 px-6 w-full flex items-center justify-center gap-3">
+                    <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-black"><i class="fa-solid fa-check"></i></div>
+                    <div class="text-left">
+                        <h4 class="text-green-400 font-bold text-sm">Network: TRC20 (Tron)</h4>
+                        <p class="text-green-500/70 text-xs">Only send USDT via TRC20 network</p>
                     </div>
                 </div>
             </div>
-            <div class="bg-grad-purple rounded-xl p-5 neon-purple relative overflow-hidden flex items-center gap-4">
-                <i class="fa-solid fa-chart-column absolute right-2 bottom-0 text-6xl text-white opacity-10"></i>
-                <div class="text-4xl text-[#d946ef]"><i class="fa-solid fa-right-left"></i></div>
+        </div>
+
+        <!-- 📤 WITHDRAW SECTION (NEW) -->
+        <div id="withdraw-section" class="hidden space-y-4 animate-[fadeIn_0.3s_ease-in-out]">
+            <button onclick="showSection('main-dashboard')" class="text-[#d946ef] text-sm hover:underline flex items-center gap-2 mb-2"><i class="fa-solid fa-arrow-left"></i> Back to Dashboard</button>
+            
+            <div class="bg-grad-purple rounded-xl p-6 neon-purple flex items-center gap-4">
+                <div class="w-16 h-16 bg-[#d946ef] rounded-2xl flex items-center justify-center text-3xl text-white shadow-[0_0_20px_#d946ef]">
+                    <i class="fa-solid fa-arrow-up-from-bracket"></i>
+                </div>
                 <div>
-                    <p class="text-sm font-bold text-gray-200">Total Withdrawal</p>
-                    <h3 class="text-3xl font-black text-white" id="dyn-withdraw">$ 0.00</h3>
+                    <h2 class="text-2xl font-black text-white">Withdraw</h2>
+                    <p class="text-sm text-gray-300">Request your withdrawal</p>
                 </div>
             </div>
-            <div class="bg-grad-gold rounded-xl p-5 neon-gold relative overflow-hidden flex items-center gap-4">
-                <i class="fa-solid fa-arrow-trend-up absolute right-2 bottom-2 text-6xl text-white opacity-10"></i>
-                <div class="text-4xl text-[#facc15]"><i class="fa-solid fa-trophy"></i></div>
-                <div>
-                    <p class="text-sm font-bold text-gray-200">Total Profit</p>
-                    <h3 class="text-3xl font-black text-white" id="dyn-total-profit">$ 0.00</h3>
+            
+            <div class="bg-[#050b14] border border-purple-900 rounded-xl p-6 shadow-lg relative overflow-hidden">
+                <div class="absolute top-0 left-0 w-32 h-32 bg-[#d946ef] opacity-10 blur-3xl rounded-full"></div>
+
+                <h3 class="text-sm font-bold text-gray-300 mb-4 flex items-center gap-2"><i class="fa-solid fa-credit-card text-[#d946ef]"></i> Select Payment Method</h3>
+                
+                <div class="grid grid-cols-2 md:grid-cols-2 gap-3 mb-6">
+                    <!-- Binance (Selected) -->
+                    <button id="withdraw-method" class="bg-[#020617] border border-[#00c6ff] text-white py-3 px-2 rounded-xl flex justify-center items-center gap-2 neon-blue relative font-bold text-sm">
+                        <span class="text-yellow-500 text-lg"><i class="fa-brands fa-bitcoin"></i></span> Binance Pay
+                        <div class="absolute -top-2 -right-2 bg-[#00c6ff] text-black rounded-full w-5 h-5 flex items-center justify-center text-xs shadow-lg"><i class="fa-solid fa-check"></i></div>
+                    </button>
+                    <!-- Others -->
+                    <button class="bg-[#020617] border border-gray-800 text-gray-400 py-3 px-2 rounded-xl flex justify-center items-center gap-2 font-bold text-sm opacity-50 cursor-not-allowed">
+                        <span class="text-red-500 text-lg"><i class="fa-solid fa-diamond"></i></span> TRC20
+                    </button>
+                    <button class="bg-[#020617] border border-gray-800 text-gray-400 py-3 px-2 rounded-xl flex justify-center items-center gap-2 font-black italic text-sm opacity-50 cursor-not-allowed">
+                        <span class="text-pink-500">bKash</span>
+                    </button>
+                    <button class="bg-[#020617] border border-gray-800 text-gray-400 py-3 px-2 rounded-xl flex justify-center items-center gap-2 font-black italic text-sm opacity-50 cursor-not-allowed">
+                        <span class="text-orange-500">Nagad</span>
+                    </button>
+                    <button class="bg-[#020617] border border-gray-800 text-gray-400 py-3 px-2 rounded-xl flex justify-center items-center gap-2 font-bold text-sm opacity-50 cursor-not-allowed">
+                        <span class="text-gray-300"><i class="fa-solid fa-building-columns"></i></span> Bank Account
+                    </button>
+                    <button class="bg-[#020617] border border-gray-800 text-gray-400 py-3 px-2 rounded-xl flex justify-center items-center gap-2 font-bold text-sm italic opacity-50 cursor-not-allowed">
+                        <span class="text-blue-500">PayPal</span>
+                    </button>
+                </div>
+                
+                <div class="space-y-5 relative z-10">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-300 mb-2 flex items-center gap-2"><i class="fa-solid fa-user text-[#d946ef]"></i> Your Binance Pay ID</label>
+                        <input type="text" id="withdraw-wallet" placeholder="Enter your Binance Pay ID" class="w-full bg-[#020617] border border-gray-700 rounded-xl p-3.5 text-white focus:border-[#d946ef] outline-none shadow-inner transition">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-300 mb-2 flex items-center gap-2"><i class="fa-solid fa-circle-dollar-to-slot text-[#d946ef]"></i> Amount (USD)</label>
+                        <input type="number" id="withdraw-amount" placeholder="Enter amount (Min $10)" class="w-full bg-[#020617] border border-gray-700 rounded-xl p-3.5 text-white focus:border-[#d946ef] outline-none shadow-inner transition font-mono">
+                    </div>
+                    <button id="withdraw-btn" onclick="requestWithdrawal()" class="w-full bg-grad-purple neon-purple text-white font-black py-4 rounded-xl transition mt-4 flex justify-center items-center gap-3 text-lg hover:scale-[1.01] active:scale-[0.98]">
+                        <i class="fa-solid fa-paper-plane"></i> Request Withdrawal
+                    </button>
                 </div>
             </div>
         </div>
+
     </main>
 
     <script>
-        // 🚀 সার্ভার থেকে ইউজার স্পেসিফিক ডাটা ফেচ করার ফাংশন
         function fetchAccountData() {
             const username = localStorage.getItem('username');
             if(username) {
@@ -160,8 +312,6 @@
                 }).catch(err => console.error(err));
             }
         }
-        
-        // প্রতি ৫ সেকেন্ডে ডাটা আপডেট হবে
         setInterval(fetchAccountData, 5000);
         fetchAccountData();
     </script>
