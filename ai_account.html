@@ -29,7 +29,6 @@
             if(user) localStorage.setItem('username', user);
         }
 
-        // 🚀 সেকশন পরিবর্তনের স্ক্রিপ্ট
         function showSection(sectionId) {
             document.getElementById('main-dashboard').classList.add('hidden');
             document.getElementById('deposit-section').classList.add('hidden');
@@ -45,73 +44,65 @@
             alert("Deposit Address Copied!");
         }
 
-        // 🚀 পেমেন্ট মেথড সিলেক্ট করার ডায়নামিক স্ক্রিপ্ট
         let currentMethod = "Binance Pay";
-
         function selectMethod(method, element) {
             currentMethod = method;
-            
-            // সব বাটনের সিলেক্টেড স্টাইল রিমুভ করা হচ্ছে
             document.querySelectorAll('.pay-btn').forEach(btn => {
                 btn.classList.remove('border-[#00c6ff]', 'text-white', 'neon-blue');
                 btn.classList.add('border-gray-800', 'text-gray-400');
                 btn.querySelector('.check-icon').classList.add('hidden');
             });
-            
-            // যেই বাটনে ক্লিক করা হয়েছে সেটায় স্টাইল অ্যাড করা হচ্ছে
             element.classList.remove('border-gray-800', 'text-gray-400');
             element.classList.add('border-[#00c6ff]', 'text-white', 'neon-blue');
             element.querySelector('.check-icon').classList.remove('hidden');
 
-            // ইনপুট ফিল্ডের নাম ও প্লেসহোল্ডার ডায়নামিকভাবে পরিবর্তন
             const label = document.getElementById('wallet-label');
             const input = document.getElementById('withdraw-wallet');
             
-            if (method === 'Binance Pay') {
-                label.innerHTML = '<i class="fa-solid fa-user text-[#d946ef]"></i> Your Binance Pay ID';
-                input.placeholder = "Enter your Binance Pay ID";
-            } else if (method === 'TRC20') {
-                label.innerHTML = '<i class="fa-solid fa-wallet text-[#d946ef]"></i> TRC20 Wallet Address';
-                input.placeholder = "Enter your TRC20 Address";
-            } else if (method === 'bKash') {
-                label.innerHTML = '<i class="fa-solid fa-phone text-[#d946ef]"></i> bKash Personal Number';
-                input.placeholder = "e.g. 017xxxxxxxx";
-            } else if (method === 'Nagad') {
-                label.innerHTML = '<i class="fa-solid fa-phone text-[#d946ef]"></i> Nagad Personal Number';
-                input.placeholder = "e.g. 019xxxxxxxx";
-            } else if (method === 'Bank Account') {
-                label.innerHTML = '<i class="fa-solid fa-building-columns text-[#d946ef]"></i> Bank Account Details';
-                input.placeholder = "Bank Name, A/C Name, A/C No.";
-            } else if (method === 'PayPal') {
-                label.innerHTML = '<i class="fa-brands fa-paypal text-[#d946ef]"></i> PayPal Email Address';
-                input.placeholder = "Enter PayPal Email";
-            }
+            if (method === 'Binance Pay') { label.innerHTML = '<i class="fa-solid fa-user text-[#d946ef]"></i> Your Binance Pay ID'; input.placeholder = "Enter your Binance Pay ID"; } 
+            else if (method === 'TRC20') { label.innerHTML = '<i class="fa-solid fa-wallet text-[#d946ef]"></i> TRC20 Wallet Address'; input.placeholder = "Enter your TRC20 Address"; } 
+            else if (method === 'bKash') { label.innerHTML = '<i class="fa-solid fa-phone text-[#d946ef]"></i> bKash Personal Number'; input.placeholder = "e.g. 017xxxxxxxx"; } 
+            else if (method === 'Nagad') { label.innerHTML = '<i class="fa-solid fa-phone text-[#d946ef]"></i> Nagad Personal Number'; input.placeholder = "e.g. 019xxxxxxxx"; } 
+            else if (method === 'Bank Account') { label.innerHTML = '<i class="fa-solid fa-building-columns text-[#d946ef]"></i> Bank Account Details'; input.placeholder = "Bank Name, A/C Name, A/C No."; } 
+            else if (method === 'PayPal') { label.innerHTML = '<i class="fa-brands fa-paypal text-[#d946ef]"></i> PayPal Email Address'; input.placeholder = "Enter PayPal Email"; }
         }
 
+        // 🚀 নতুন উইথড্র রিকোয়েস্ট ফাংশন
         function requestWithdrawal() {
             const wallet = document.getElementById('withdraw-wallet').value;
-            const amount = document.getElementById('withdraw-amount').value;
-            const username = localStorage.getItem('username') || "Unknown User";
+            const amount = parseFloat(document.getElementById('withdraw-amount').value);
+            const username = localStorage.getItem('username');
+
+            if(!username) {
+                alert("User not found! Please login again.");
+                return;
+            }
 
             if(!wallet || !amount || amount < 10) {
                 alert("Please enter a valid detail and amount (Min $10).");
                 return;
             }
 
-            const msg = `💸 *NEW WITHDRAWAL REQUEST*\n\n👤 *User:* ${username}\n🏦 *Method:* ${currentMethod}\n💳 *Wallet/ID:* ${wallet}\n💰 *Amount:* $${amount}`;
-
             document.getElementById('withdraw-btn').innerText = "Processing...";
             
-            fetch('/api/submit_form', {
+            fetch('/api/withdraw', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({message: msg})
+                body: JSON.stringify({username: username, method: currentMethod, wallet: wallet, amount: amount})
             }).then(res => res.json()).then(data => {
-                alert("Withdrawal Request Sent Successfully!");
-                document.getElementById('withdraw-wallet').value = '';
-                document.getElementById('withdraw-amount').value = '';
+                if(data.status === 'success') {
+                    // 🚀 ইংলিশ সাকসেস মেসেজ
+                    alert("Your request will be processed within 24 hours.");
+                    document.getElementById('withdraw-wallet').value = '';
+                    document.getElementById('withdraw-amount').value = '';
+                    
+                    // উইথড্র করার পর আপডেট ডাটা লোড হবে
+                    fetchAccountData();
+                    showSection('main-dashboard');
+                } else {
+                    alert(data.message || "Something went wrong!");
+                }
                 document.getElementById('withdraw-btn').innerHTML = '<i class="fa-solid fa-paper-plane"></i> Request Withdrawal';
-                showSection('main-dashboard');
             }).catch(err => {
                 alert("Network Error!");
                 document.getElementById('withdraw-btn').innerHTML = '<i class="fa-solid fa-paper-plane"></i> Request Withdrawal';
@@ -143,7 +134,6 @@
 
     <main class="max-w-5xl mx-auto px-4 py-6 space-y-4">
         
-        <!-- 🎯 MAIN DASHBOARD SECTION -->
         <div id="main-dashboard" class="block space-y-4">
             <div class="bg-grad-blue rounded-xl p-6 neon-blue flex justify-between items-center relative overflow-hidden">
                 <div class="absolute right-0 top-0 opacity-20 text-9xl"><i class="fa-solid fa-globe"></i></div>
@@ -224,7 +214,6 @@
             </div>
         </div>
 
-        <!-- 📥 DEPOSIT SECTION -->
         <div id="deposit-section" class="hidden space-y-4 animate-[fadeIn_0.3s_ease-in-out]">
             <button onclick="showSection('main-dashboard')" class="text-[#00c6ff] text-sm hover:underline flex items-center gap-2 mb-2"><i class="fa-solid fa-arrow-left"></i> Back to Dashboard</button>
             
@@ -271,7 +260,6 @@
             </div>
         </div>
 
-        <!-- 📤 WITHDRAW SECTION (FIXED FOR DYNAMIC SELECTION) -->
         <div id="withdraw-section" class="hidden space-y-4 animate-[fadeIn_0.3s_ease-in-out]">
             <button onclick="showSection('main-dashboard')" class="text-[#d946ef] text-sm hover:underline flex items-center gap-2 mb-2"><i class="fa-solid fa-arrow-left"></i> Back to Dashboard</button>
             
@@ -290,7 +278,6 @@
 
                 <h3 class="text-sm font-bold text-gray-300 mb-4 flex items-center gap-2"><i class="fa-solid fa-credit-card text-[#d946ef]"></i> Select Payment Method</h3>
                 
-                <!-- 🚀 100% Clickable & Dynamic Payment Buttons -->
                 <div class="grid grid-cols-2 md:grid-cols-2 gap-3 mb-6">
                     <button onclick="selectMethod('Binance Pay', this)" class="pay-btn bg-[#020617] border border-[#00c6ff] text-white py-3 px-2 rounded-xl flex justify-center items-center gap-2 neon-blue relative font-bold text-sm transition">
                         <span class="text-yellow-500 text-lg"><i class="fa-brands fa-bitcoin"></i></span> <span>Binance Pay</span>
@@ -320,7 +307,6 @@
                 
                 <div class="space-y-5 relative z-10">
                     <div>
-                        <!-- 🚀 Label changes dynamically -->
                         <label id="wallet-label" class="block text-xs font-bold text-gray-300 mb-2 flex items-center gap-2"><i class="fa-solid fa-user text-[#d946ef]"></i> Your Binance Pay ID</label>
                         <input type="text" id="withdraw-wallet" placeholder="Enter your Binance Pay ID" class="w-full bg-[#020617] border border-gray-700 rounded-xl p-3.5 text-white focus:border-[#d946ef] outline-none shadow-inner transition">
                     </div>
