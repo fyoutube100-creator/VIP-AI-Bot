@@ -8,31 +8,19 @@ from datetime import datetime, timedelta
 import urllib.request
 import json
 import time
+import threading
 
 app = Flask(__name__)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 VIP_USERS = {
-    "admin": "12345",
-    "Fahim": "fahim",
-    "vip1": "blackshoter",
-    "boss": "gold99",
-    "FARHAD": "Fm889896@",
-    "trader_pro": "pro2026",
-    "gold_king": "kingXAU",
-    "fx_sniper": "sniper@123",
-    "vip2": "pass2vip",
-    "bull_master": "bullrun99",
-    "bear_hunter": "hunter2026",
-    "smart_money": "smc2026",
-    "profit_maker": "profit#100",
-    "signal_boss": "boss@2026",
-    "alpha_trader": "alpha!fx",
-    "pip_catcher": "catch100",
-    "whale_alert": "whale999",
-    "crypto_fx": "fx@crypto",
-    "scalper_pro": "scalp50",
-    "vi": "tIPx"
+    "admin": "12345", "Fahim": "fahim", "vip1": "blackshoter", "boss": "gold99",
+    "FARHAD": "Fm889896@", "trader_pro": "pro2026", "gold_king": "kingXAU",
+    "fx_sniper": "sniper@123", "vip2": "pass2vip", "bull_master": "bullrun99",
+    "bear_hunter": "hunter2026", "smart_money": "smc2026", "profit_maker": "profit#100",
+    "signal_boss": "boss@2026", "alpha_trader": "alpha!fx", "pip_catcher": "catch100",
+    "whale_alert": "whale999", "crypto_fx": "fx@crypto", "scalper_pro": "scalp50",
+    "rader": "t"
 }
 
 tv = TvDatafeed()
@@ -41,8 +29,7 @@ market_cache = {"time": 0, "spot": None, "eu": None}
 def get_offset():
     try:
         if os.path.exists("offset.txt"):
-            with open("offset.txt", "r") as f:
-                return float(f.read().strip())
+            with open("offset.txt", "r") as f: return float(f.read().strip())
     except: pass
     return 0.0
 
@@ -57,8 +44,7 @@ def load_state():
     return {"active_trade_forex": None, "active_trade_binary": None, "trade_history": []}
 
 def save_state(state):
-    with open('state.json', 'w') as f:
-        json.dump(state, f)
+    with open('state.json', 'w') as f: json.dump(state, f)
 
 def load_devices():
     try:
@@ -70,6 +56,17 @@ def load_devices():
 def save_devices(data):
     with open('devices.json', 'w') as f: json.dump(data, f)
 
+# 🚀 ইউজারদের ডাটাবেস লোড ও সেভ
+def load_users_data():
+    try:
+        if os.path.exists('users_data.json'):
+            with open('users_data.json', 'r') as f: return json.load(f)
+    except: pass
+    return {}
+
+def save_users_data(data):
+    with open('users_data.json', 'w') as f: json.dump(data, f)
+
 def get_bd_time():
     return datetime.utcnow() + timedelta(hours=6)
 
@@ -79,14 +76,50 @@ def send_telegram_alert(msg):
     if botToken:
         try:
             url = f"https://api.telegram.org/bot{botToken}/sendMessage"
-            req = urllib.request.Request(
-                url, 
-                data=json.dumps({'chat_id': chatId, 'text': msg, 'parse_mode': 'Markdown'}).encode('utf-8'), 
-                headers={'Content-Type': 'application/json'}
-            )
+            req = urllib.request.Request(url, data=json.dumps({'chat_id': chatId, 'text': msg, 'parse_mode': 'Markdown'}).encode('utf-8'), headers={'Content-Type': 'application/json'})
             urllib.request.urlopen(req)
+        except Exception as e: print("Telegram Alert Error:", e)
+
+# 🚀 টেলিগ্রাম থেকে কমান্ড রিসিভ করার ব্যাকগ্রাউন্ড থ্রেড (Admin Control)
+last_update_id = 0
+def telegram_polling():
+    global last_update_id
+    botToken = os.environ.get('TELEGRAM_BOT_TOKEN')
+    if not botToken: return
+    while True:
+        try:
+            url = f"https://api.telegram.org/bot{botToken}/getUpdates?offset={last_update_id + 1}&timeout=10"
+            response = urllib.request.urlopen(urllib.request.Request(url), timeout=15)
+            data = json.loads(response.read().decode('utf-8'))
+            
+            for result in data.get('result', []):
+                last_update_id = result['update_id']
+                message = result.get('message', {})
+                chat_id = str(message.get('chat', {}).get('id', ''))
+                text = message.get('text', '')
+                
+                # কমান্ড ফরমেট: /set username balance 1500
+                if chat_id == "7204862590" and text.startswith('/set'):
+                    parts = text.split()
+                    if len(parts) >= 4:
+                        _, username, field, value = parts[0], parts[1], parts[2].lower(), " ".join(parts[3:])
+                        valid_fields = ['balance', 'deposit', 'profit', 'total_profit', 'withdraw']
+                        
+                        if field in valid_fields:
+                            users = load_users_data()
+                            if username not in users:
+                                users[username] = {"balance": "0.00", "deposit": "0.00", "profit": "0.00", "total_profit": "0.00", "withdraw": "0.00"}
+                            
+                            users[username][field] = value
+                            save_users_data(users)
+                            send_telegram_alert(f"✅ *Data Updated!*\n👤 *User:* `{username}`\n📝 *Field:* {field}\n💰 *New Value:* ${value}")
+                        else:
+                            send_telegram_alert(f"❌ *Invalid Field!*\nUse: `balance`, `deposit`, `profit`, `total_profit`, `withdraw`")
         except Exception as e:
-            print("Telegram Alert Error:", e)
+            pass
+        time.sleep(3)
+
+threading.Thread(target=telegram_polling, daemon=True).start()
 
 @app.route('/')
 def home(): return send_from_directory(BASE_DIR, 'login.html')
@@ -97,7 +130,6 @@ def bot_dashboard(): return send_from_directory(BASE_DIR, 'bot.html')
 @app.route('/login.html')
 def login_page(): return send_from_directory(BASE_DIR, 'login.html')
 
-# 🚀 নতুন Ai Trading Account পেজের রুট
 @app.route('/ai_account.html')
 def ai_account_page(): return send_from_directory(BASE_DIR, 'ai_account.html')
 
@@ -154,19 +186,22 @@ def submit_form():
         botToken = os.environ.get('TELEGRAM_BOT_TOKEN')
         chatId = "7204862590"
         msg = data.get('message', 'No message provided.')
-        
         if botToken:
-            url = f"https://api.telegram.org/bot{botToken}/sendMessage"
-            req = urllib.request.Request(
-                url, 
-                data=json.dumps({'chat_id': chatId, 'text': msg, 'parse_mode': 'Markdown'}).encode('utf-8'), 
-                headers={'Content-Type': 'application/json'}
-            )
+            req = urllib.request.Request(f"https://api.telegram.org/bot{botToken}/sendMessage", data=json.dumps({'chat_id': chatId, 'text': msg, 'parse_mode': 'Markdown'}).encode('utf-8'), headers={'Content-Type': 'application/json'})
             urllib.request.urlopen(req)
         return jsonify({"status": "success"})
-    except Exception as e:
-        print("Telegram API Error:", e)
-        return jsonify({"status": "error", "message": str(e)})
+    except Exception as e: return jsonify({"status": "error", "message": str(e)})
+
+# 🚀 ইউজার ডাটা পাঠানোর API
+@app.route('/api/get_user_data', methods=['POST'])
+def get_user_data():
+    try:
+        username = request.get_json().get('username', '')
+        users = load_users_data()
+        if username in users:
+            return jsonify({"status": "success", "data": users[username]})
+        return jsonify({"status": "success", "data": {"balance": "0.00", "deposit": "0.00", "profit": "0.00", "total_profit": "0.00", "withdraw": "0.00"}})
+    except Exception as e: return jsonify({"status": "error"})
 
 def fetch_tradingview_data():
     global market_cache
@@ -188,7 +223,6 @@ def analyze_market():
     binary_signal = {"asset": "EUR/USD", "type": "BINARY", "action": "WAIT ⏳", "timeframe": "-- : --", "status": "Analyzing...", "message": "মার্কেট স্ক্যান করা হচ্ছে..."}
 
     bd_now = get_bd_time()
-    
     if bd_now.weekday() >= 5: 
         forex_signal.update({"action": "WEEKEND ⏸️", "status": "Market Offline", "message": "আজ উইকেন্ড! মার্কেট বন্ধ।"})
         binary_signal.update({"action": "WEEKEND ⏸️", "status": "Market Offline", "message": "আজ উইকেন্ড! OTC অফ।"})
@@ -196,7 +230,6 @@ def analyze_market():
 
     try:
         spot_data, eu_data = fetch_tradingview_data()
-        
         forex_closed_now = False 
         
         if spot_data is not None and not spot_data.empty and len(spot_data) >= 200:
@@ -211,30 +244,18 @@ def analyze_market():
             if active_trade_forex:
                 if active_trade_forex['action'] == 'BUY 🟢':
                     if close >= active_trade_forex['tp1_val']: 
-                        active_trade_forex['result'] = 'WIN ✅'
-                        send_telegram_alert(f"✅ *FOREX RESULT: WIN*\n📈 *Asset:* GOLD\n🎯 *Action:* BUY\n💰 *Hit TP!*")
-                        trade_history.insert(0, active_trade_forex)
-                        active_trade_forex = None
-                        forex_closed_now = True
+                        active_trade_forex['result'] = 'WIN ✅'; send_telegram_alert(f"✅ *FOREX RESULT: WIN*\n📈 *Asset:* GOLD\n🎯 *Action:* BUY\n💰 *Hit TP!*")
+                        trade_history.insert(0, active_trade_forex); active_trade_forex = None; forex_closed_now = True
                     elif close <= active_trade_forex['sl_val']: 
-                        active_trade_forex['result'] = 'LOSS ❌'
-                        send_telegram_alert(f"❌ *FOREX RESULT: LOSS*\n📈 *Asset:* GOLD\n🎯 *Action:* BUY\n🛑 *Hit SL!*")
-                        trade_history.insert(0, active_trade_forex)
-                        active_trade_forex = None
-                        forex_closed_now = True
+                        active_trade_forex['result'] = 'LOSS ❌'; send_telegram_alert(f"❌ *FOREX RESULT: LOSS*\n📈 *Asset:* GOLD\n🎯 *Action:* BUY\n🛑 *Hit SL!*")
+                        trade_history.insert(0, active_trade_forex); active_trade_forex = None; forex_closed_now = True
                 elif active_trade_forex['action'] == 'SELL 🔴':
                     if close <= active_trade_forex['tp1_val']: 
-                        active_trade_forex['result'] = 'WIN ✅'
-                        send_telegram_alert(f"✅ *FOREX RESULT: WIN*\n📈 *Asset:* GOLD\n🎯 *Action:* SELL\n💰 *Hit TP!*")
-                        trade_history.insert(0, active_trade_forex)
-                        active_trade_forex = None
-                        forex_closed_now = True
+                        active_trade_forex['result'] = 'WIN ✅'; send_telegram_alert(f"✅ *FOREX RESULT: WIN*\n📈 *Asset:* GOLD\n🎯 *Action:* SELL\n💰 *Hit TP!*")
+                        trade_history.insert(0, active_trade_forex); active_trade_forex = None; forex_closed_now = True
                     elif close >= active_trade_forex['sl_val']: 
-                        active_trade_forex['result'] = 'LOSS ❌'
-                        send_telegram_alert(f"❌ *FOREX RESULT: LOSS*\n📈 *Asset:* GOLD\n🎯 *Action:* SELL\n🛑 *Hit SL!*")
-                        trade_history.insert(0, active_trade_forex)
-                        active_trade_forex = None
-                        forex_closed_now = True
+                        active_trade_forex['result'] = 'LOSS ❌'; send_telegram_alert(f"❌ *FOREX RESULT: LOSS*\n📈 *Asset:* GOLD\n🎯 *Action:* SELL\n🛑 *Hit SL!*")
+                        trade_history.insert(0, active_trade_forex); active_trade_forex = None; forex_closed_now = True
 
             if active_trade_forex is None and not forex_closed_now:
                 pip_55, pip_80 = 5.5, 8.0
@@ -245,11 +266,9 @@ def analyze_market():
                     active_trade_forex = {"time": bd_now.strftime("%I:%M %p"), "asset": "GOLD (XAUUSD)", "type": "FOREX", "action": "SELL 🔴", "entry": close, "tp1_val": close - pip_55, "tp2_val": close - pip_80, "sl_val": close + pip_55, "result": "Running ⏳"}
                     send_telegram_alert(f"🚨 *NEW FOREX SIGNAL*\n📈 *Asset:* GOLD (XAUUSD)\n🔴 *Action:* SELL\n🎯 *Entry:* {close:.2f}\n✅ *TP1:* {close - pip_55:.2f}\n🛑 *SL:* {close + pip_55:.2f}")
 
-            if active_trade_forex:
-                forex_signal.update({"action": active_trade_forex['action'], "entry": f"{active_trade_forex['entry']:.2f}", "tp1": f"{active_trade_forex['tp1_val']:.2f}", "tp2": f"{active_trade_forex['tp2_val']:.2f}", "sl": f"{active_trade_forex['sl_val']:.2f}", "status": "Running...", "message": "AI Confirmed: Trade is Currently Running."})
+            if active_trade_forex: forex_signal.update({"action": active_trade_forex['action'], "entry": f"{active_trade_forex['entry']:.2f}", "tp1": f"{active_trade_forex['tp1_val']:.2f}", "tp2": f"{active_trade_forex['tp2_val']:.2f}", "sl": f"{active_trade_forex['sl_val']:.2f}", "status": "Running...", "message": "AI Confirmed: Trade is Currently Running."})
         
         binary_closed_now = False 
-        
         if eu_data is not None and not eu_data.empty and len(eu_data) >= 20:
             if active_trade_binary:
                 try:
@@ -260,7 +279,6 @@ def analyze_market():
                     if bd_now >= entry_dt and active_trade_binary.get('entry_price') is None:
                         active_trade_binary['entry_price'] = current_close
                         active_trade_binary['status'] = "Running ⏳"
-                        
                     elif bd_now >= expiry_dt and active_trade_binary.get('entry_price') is not None:
                         entry_p = active_trade_binary['entry_price']
                         is_call = 'CALL' in active_trade_binary['action']
@@ -270,54 +288,27 @@ def analyze_market():
                         elif current_close == entry_p: active_trade_binary['result'] = 'REFUND 🔄'
                         else: active_trade_binary['result'] = 'LOSS ❌'
                             
-                        active_trade_binary['entry'] = f"{entry_p:.5f}"
-                        active_trade_binary['tp1_val'] = "1 Min Exp." 
-                        active_trade_binary['sl_val'] = f"{current_close:.5f}"
-                        
+                        active_trade_binary['entry'] = f"{entry_p:.5f}"; active_trade_binary['tp1_val'] = "1 Min Exp."; active_trade_binary['sl_val'] = f"{current_close:.5f}"
                         send_telegram_alert(f"🏁 *BINARY RESULT: {active_trade_binary['result']}*\n📉 *Asset:* EUR/USD\n⏰ *Time:* {active_trade_binary['time_display']}")
-                        
-                        trade_history.insert(0, active_trade_binary)
-                        active_trade_binary = None
-                        binary_closed_now = True
+                        trade_history.insert(0, active_trade_binary); active_trade_binary = None; binary_closed_now = True
                 except Exception as e: print("Bin Result Error:", e); active_trade_binary = None
                     
             if active_trade_binary is None and not binary_closed_now:
                 eu_data['RSI'] = ta.momentum.rsi(eu_data['close'].squeeze(), window=14)
                 indicator_bb = ta.volatility.BollingerBands(close=eu_data['close'].squeeze(), window=20, window_dev=2)
-                eu_data['BB_lower'] = indicator_bb.bollinger_lband()
-                eu_data['BB_upper'] = indicator_bb.bollinger_hband()
-                
-                eu_close = float(eu_data.iloc[-1]['close'])
-                eu_rsi = float(eu_data.iloc[-1]['RSI'])
-                bb_low = float(eu_data.iloc[-1]['BB_lower'])
-                bb_up = float(eu_data.iloc[-1]['BB_upper'])
+                eu_data['BB_lower'] = indicator_bb.bollinger_lband(); eu_data['BB_upper'] = indicator_bb.bollinger_hband()
+                eu_close = float(eu_data.iloc[-1]['close']); eu_rsi = float(eu_data.iloc[-1]['RSI']); bb_low = float(eu_data.iloc[-1]['BB_lower']); bb_up = float(eu_data.iloc[-1]['BB_upper'])
                 
                 action = None
                 if eu_rsi < 25 and eu_close <= bb_low: action = "CALL 🟢"
                 elif eu_rsi > 75 and eu_close >= bb_up: action = "PUT 🔴"
                     
                 if action:
-                    entry_dt = bd_now + timedelta(minutes=1)
-                    expiry_dt = bd_now + timedelta(minutes=2)
-                    
-                    active_trade_binary = {
-                        "time": bd_now.strftime("%I:%M %p"),
-                        "asset": "EUR/USD", "type": "BINARY", "action": action,
-                        "entry_time_full": entry_dt.strftime("%Y-%m-%d %H:%M:%S"),
-                        "expiry_time_full": expiry_dt.strftime("%Y-%m-%d %H:%M:%S"),
-                        "time_display": f"{entry_dt.strftime('%H:%M')} - {expiry_dt.strftime('%H:%M')}",
-                        "entry_price": None, "status": "Waiting for Entry ⏳", "result": "Pending"
-                    }
-                    
+                    entry_dt = bd_now + timedelta(minutes=1); expiry_dt = bd_now + timedelta(minutes=2)
+                    active_trade_binary = {"time": bd_now.strftime("%I:%M %p"), "asset": "EUR/USD", "type": "BINARY", "action": action, "entry_time_full": entry_dt.strftime("%Y-%m-%d %H:%M:%S"), "expiry_time_full": expiry_dt.strftime("%Y-%m-%d %H:%M:%S"), "time_display": f"{entry_dt.strftime('%H:%M')} - {expiry_dt.strftime('%H:%M')}", "entry_price": None, "status": "Waiting for Entry ⏳", "result": "Pending"}
                     send_telegram_alert(f"🚨 *NEW BINARY SIGNAL*\n📉 *Asset:* EUR/USD\n🔵 *Action:* {action}\n⏰ *Time:* {active_trade_binary['time_display']}")
             
-            if active_trade_binary:
-                binary_signal.update({
-                    "action": active_trade_binary['action'],
-                    "timeframe": active_trade_binary['time_display'],
-                    "status": active_trade_binary['status'],
-                    "message": "অ্যাডভান্স সিগন্যাল! এন্ট্রির জন্য প্রস্তুত হোন।" if active_trade_binary.get('entry_price') is None else "ট্রেড বর্তমানে রানিং..."
-                })
+            if active_trade_binary: binary_signal.update({"action": active_trade_binary['action'], "timeframe": active_trade_binary['time_display'], "status": active_trade_binary['status'], "message": "অ্যাডভান্স সিগন্যাল! এন্ট্রির জন্য প্রস্তুত হোন।" if active_trade_binary.get('entry_price') is None else "ট্রেড বর্তমানে রানিং..."})
     except Exception as e: print("System Error:", e)
 
     state.update({'active_trade_forex': active_trade_forex, 'active_trade_binary': active_trade_binary, 'trade_history': trade_history[:10]})
