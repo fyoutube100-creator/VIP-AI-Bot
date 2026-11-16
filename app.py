@@ -20,7 +20,7 @@ VIP_USERS = {
     "bear_hunter": "hunter2026", "smart_money": "smc2026", "profit_maker": "profit#100",
     "signal_boss": "boss@2026", "alpha_trader": "alpha!fx", "pip_catcher": "catch100",
     "whale_alert": "whale999", "crypto_fx": "fx@crypto", "scalper_pro": "scalp50",
-    "vder": "tx"
+    "ader": "t"
 }
 
 tv = TvDatafeed()
@@ -79,7 +79,6 @@ def send_telegram_alert(msg):
             urllib.request.urlopen(req)
         except Exception as e: print("Telegram Alert Error:", e)
 
-# 🚀 টেলিগ্রাম কমান্ড রিসিভার এবং AI অটো ক্যালকুলেশন
 last_update_id = 0
 def telegram_polling():
     global last_update_id
@@ -108,18 +107,16 @@ def telegram_polling():
                             if username not in users:
                                 users[username] = {"balance": "0.00", "deposit": "0.00", "profit": "0.00", "total_profit": "0.00", "withdraw": "0.00"}
                             
-                            # 🚀 AI Auto Calculation Logic
                             if field == 'deposit':
                                 try:
                                     dep_amount = float(value)
-                                    daily_profit = dep_amount * 0.50 # 50% Profit Calculation
-                                    new_balance = dep_amount + daily_profit # Total Balance
+                                    daily_profit = dep_amount * 0.50
+                                    new_balance = dep_amount + daily_profit
                                     
                                     users[username]['deposit'] = f"{dep_amount:.2f}"
                                     users[username]['profit'] = f"{daily_profit:.2f}"
                                     users[username]['balance'] = f"{new_balance:.2f}"
                                     
-                                    # Total Profit এর সাথে নতুন প্রফিট যোগ হবে
                                     current_total_profit = float(users[username].get('total_profit', "0.00"))
                                     users[username]['total_profit'] = f"{current_total_profit + daily_profit:.2f}"
                                     
@@ -128,7 +125,6 @@ def telegram_polling():
                                 except ValueError:
                                     send_telegram_alert("❌ *Error:* Deposit amount must be a number!")
                             else:
-                                # অন্যান্য ফিল্ড ম্যানুয়ালি আপডেট করার জন্য
                                 users[username][field] = value
                                 save_users_data(users)
                                 send_telegram_alert(f"✅ *Data Updated!*\n👤 *User:* `{username}`\n📝 *Field:* {field}\n💰 *New Value:* ${value}")
@@ -210,6 +206,42 @@ def submit_form():
             urllib.request.urlopen(req)
         return jsonify({"status": "success"})
     except Exception as e: return jsonify({"status": "error", "message": str(e)})
+
+# 🚀 নতুন উইথড্র এবং ব্যালেন্স মাইনাস করার API
+@app.route('/api/withdraw', methods=['POST'])
+def api_withdraw():
+    try:
+        data = request.get_json()
+        username = data.get('username')
+        method = data.get('method')
+        wallet = data.get('wallet')
+        amount = float(data.get('amount', 0))
+
+        if not username or amount < 10:
+            return jsonify({"status": "error", "message": "Invalid request."})
+
+        users = load_users_data()
+        if username not in users:
+            users[username] = {"balance": "0.00", "deposit": "0.00", "profit": "0.00", "total_profit": "0.00", "withdraw": "0.00"}
+        
+        current_balance = float(users[username].get('balance', "0.00"))
+        current_withdraw = float(users[username].get('withdraw', "0.00"))
+
+        if current_balance < amount:
+            return jsonify({"status": "error", "message": "Insufficient balance! Your balance is lower than requested amount."})
+
+        # ব্যালেন্স মাইনাস এবং উইথড্র বক্সে এমাউন্ট যোগ
+        users[username]['balance'] = f"{(current_balance - amount):.2f}"
+        users[username]['withdraw'] = f"{(current_withdraw + amount):.2f}"
+        save_users_data(users)
+
+        # এডমিনকে টেলিগ্রামে মেসেজ পাঠানো
+        msg = f"💸 *NEW WITHDRAWAL REQUEST*\n\n👤 *User:* `{username}`\n🏦 *Method:* {method}\n💳 *Wallet/ID:* `{wallet}`\n💰 *Amount:* ${amount:.2f}\n📉 *Remaining Balance:* ${float(users[username]['balance']):.2f}"
+        send_telegram_alert(msg)
+
+        return jsonify({"status": "success"})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)})
 
 @app.route('/api/get_user_data', methods=['POST'])
 def get_user_data():
