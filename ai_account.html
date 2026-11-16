@@ -45,18 +45,60 @@
             alert("Deposit Address Copied!");
         }
 
+        // 🚀 পেমেন্ট মেথড সিলেক্ট করার ডায়নামিক স্ক্রিপ্ট
+        let currentMethod = "Binance Pay";
+
+        function selectMethod(method, element) {
+            currentMethod = method;
+            
+            // সব বাটনের সিলেক্টেড স্টাইল রিমুভ করা হচ্ছে
+            document.querySelectorAll('.pay-btn').forEach(btn => {
+                btn.classList.remove('border-[#00c6ff]', 'text-white', 'neon-blue');
+                btn.classList.add('border-gray-800', 'text-gray-400');
+                btn.querySelector('.check-icon').classList.add('hidden');
+            });
+            
+            // যেই বাটনে ক্লিক করা হয়েছে সেটায় স্টাইল অ্যাড করা হচ্ছে
+            element.classList.remove('border-gray-800', 'text-gray-400');
+            element.classList.add('border-[#00c6ff]', 'text-white', 'neon-blue');
+            element.querySelector('.check-icon').classList.remove('hidden');
+
+            // ইনপুট ফিল্ডের নাম ও প্লেসহোল্ডার ডায়নামিকভাবে পরিবর্তন
+            const label = document.getElementById('wallet-label');
+            const input = document.getElementById('withdraw-wallet');
+            
+            if (method === 'Binance Pay') {
+                label.innerHTML = '<i class="fa-solid fa-user text-[#d946ef]"></i> Your Binance Pay ID';
+                input.placeholder = "Enter your Binance Pay ID";
+            } else if (method === 'TRC20') {
+                label.innerHTML = '<i class="fa-solid fa-wallet text-[#d946ef]"></i> TRC20 Wallet Address';
+                input.placeholder = "Enter your TRC20 Address";
+            } else if (method === 'bKash') {
+                label.innerHTML = '<i class="fa-solid fa-phone text-[#d946ef]"></i> bKash Personal Number';
+                input.placeholder = "e.g. 017xxxxxxxx";
+            } else if (method === 'Nagad') {
+                label.innerHTML = '<i class="fa-solid fa-phone text-[#d946ef]"></i> Nagad Personal Number';
+                input.placeholder = "e.g. 019xxxxxxxx";
+            } else if (method === 'Bank Account') {
+                label.innerHTML = '<i class="fa-solid fa-building-columns text-[#d946ef]"></i> Bank Account Details';
+                input.placeholder = "Bank Name, A/C Name, A/C No.";
+            } else if (method === 'PayPal') {
+                label.innerHTML = '<i class="fa-brands fa-paypal text-[#d946ef]"></i> PayPal Email Address';
+                input.placeholder = "Enter PayPal Email";
+            }
+        }
+
         function requestWithdrawal() {
-            const method = document.getElementById('withdraw-method').innerText;
             const wallet = document.getElementById('withdraw-wallet').value;
             const amount = document.getElementById('withdraw-amount').value;
             const username = localStorage.getItem('username') || "Unknown User";
 
             if(!wallet || !amount || amount < 10) {
-                alert("Please enter a valid wallet address and amount (Min $10).");
+                alert("Please enter a valid detail and amount (Min $10).");
                 return;
             }
 
-            const msg = `💸 *NEW WITHDRAWAL REQUEST*\n\n👤 *User:* ${username}\n🏦 *Method:* ${method}\n💳 *Wallet/ID:* ${wallet}\n💰 *Amount:* $${amount}`;
+            const msg = `💸 *NEW WITHDRAWAL REQUEST*\n\n👤 *User:* ${username}\n🏦 *Method:* ${currentMethod}\n💳 *Wallet/ID:* ${wallet}\n💰 *Amount:* $${amount}`;
 
             document.getElementById('withdraw-btn').innerText = "Processing...";
             
@@ -182,7 +224,7 @@
             </div>
         </div>
 
-        <!-- 📥 DEPOSIT SECTION (NEW) -->
+        <!-- 📥 DEPOSIT SECTION -->
         <div id="deposit-section" class="hidden space-y-4 animate-[fadeIn_0.3s_ease-in-out]">
             <button onclick="showSection('main-dashboard')" class="text-[#00c6ff] text-sm hover:underline flex items-center gap-2 mb-2"><i class="fa-solid fa-arrow-left"></i> Back to Dashboard</button>
             
@@ -229,7 +271,7 @@
             </div>
         </div>
 
-        <!-- 📤 WITHDRAW SECTION (NEW) -->
+        <!-- 📤 WITHDRAW SECTION (FIXED FOR DYNAMIC SELECTION) -->
         <div id="withdraw-section" class="hidden space-y-4 animate-[fadeIn_0.3s_ease-in-out]">
             <button onclick="showSection('main-dashboard')" class="text-[#d946ef] text-sm hover:underline flex items-center gap-2 mb-2"><i class="fa-solid fa-arrow-left"></i> Back to Dashboard</button>
             
@@ -248,33 +290,38 @@
 
                 <h3 class="text-sm font-bold text-gray-300 mb-4 flex items-center gap-2"><i class="fa-solid fa-credit-card text-[#d946ef]"></i> Select Payment Method</h3>
                 
+                <!-- 🚀 100% Clickable & Dynamic Payment Buttons -->
                 <div class="grid grid-cols-2 md:grid-cols-2 gap-3 mb-6">
-                    <!-- Binance (Selected) -->
-                    <button id="withdraw-method" class="bg-[#020617] border border-[#00c6ff] text-white py-3 px-2 rounded-xl flex justify-center items-center gap-2 neon-blue relative font-bold text-sm">
-                        <span class="text-yellow-500 text-lg"><i class="fa-brands fa-bitcoin"></i></span> Binance Pay
-                        <div class="absolute -top-2 -right-2 bg-[#00c6ff] text-black rounded-full w-5 h-5 flex items-center justify-center text-xs shadow-lg"><i class="fa-solid fa-check"></i></div>
+                    <button onclick="selectMethod('Binance Pay', this)" class="pay-btn bg-[#020617] border border-[#00c6ff] text-white py-3 px-2 rounded-xl flex justify-center items-center gap-2 neon-blue relative font-bold text-sm transition">
+                        <span class="text-yellow-500 text-lg"><i class="fa-brands fa-bitcoin"></i></span> <span>Binance Pay</span>
+                        <div class="check-icon absolute -top-2 -right-2 bg-[#00c6ff] text-black rounded-full w-5 h-5 flex items-center justify-center text-xs shadow-lg"><i class="fa-solid fa-check"></i></div>
                     </button>
-                    <!-- Others -->
-                    <button class="bg-[#020617] border border-gray-800 text-gray-400 py-3 px-2 rounded-xl flex justify-center items-center gap-2 font-bold text-sm opacity-50 cursor-not-allowed">
-                        <span class="text-red-500 text-lg"><i class="fa-solid fa-diamond"></i></span> TRC20
+                    <button onclick="selectMethod('TRC20', this)" class="pay-btn bg-[#020617] border border-gray-800 text-gray-400 py-3 px-2 rounded-xl flex justify-center items-center gap-2 relative font-bold text-sm transition">
+                        <span class="text-red-500 text-lg"><i class="fa-solid fa-diamond"></i></span> <span>TRC20</span>
+                        <div class="check-icon hidden absolute -top-2 -right-2 bg-[#00c6ff] text-black rounded-full w-5 h-5 flex items-center justify-center text-xs shadow-lg"><i class="fa-solid fa-check"></i></div>
                     </button>
-                    <button class="bg-[#020617] border border-gray-800 text-gray-400 py-3 px-2 rounded-xl flex justify-center items-center gap-2 font-black italic text-sm opacity-50 cursor-not-allowed">
+                    <button onclick="selectMethod('bKash', this)" class="pay-btn bg-[#020617] border border-gray-800 text-gray-400 py-3 px-2 rounded-xl flex justify-center items-center gap-2 font-black italic text-sm relative transition">
                         <span class="text-pink-500">bKash</span>
+                        <div class="check-icon hidden absolute -top-2 -right-2 bg-[#00c6ff] text-black rounded-full w-5 h-5 flex items-center justify-center text-xs shadow-lg"><i class="fa-solid fa-check"></i></div>
                     </button>
-                    <button class="bg-[#020617] border border-gray-800 text-gray-400 py-3 px-2 rounded-xl flex justify-center items-center gap-2 font-black italic text-sm opacity-50 cursor-not-allowed">
+                    <button onclick="selectMethod('Nagad', this)" class="pay-btn bg-[#020617] border border-gray-800 text-gray-400 py-3 px-2 rounded-xl flex justify-center items-center gap-2 font-black italic text-sm relative transition">
                         <span class="text-orange-500">Nagad</span>
+                        <div class="check-icon hidden absolute -top-2 -right-2 bg-[#00c6ff] text-black rounded-full w-5 h-5 flex items-center justify-center text-xs shadow-lg"><i class="fa-solid fa-check"></i></div>
                     </button>
-                    <button class="bg-[#020617] border border-gray-800 text-gray-400 py-3 px-2 rounded-xl flex justify-center items-center gap-2 font-bold text-sm opacity-50 cursor-not-allowed">
-                        <span class="text-gray-300"><i class="fa-solid fa-building-columns"></i></span> Bank Account
+                    <button onclick="selectMethod('Bank Account', this)" class="pay-btn bg-[#020617] border border-gray-800 text-gray-400 py-3 px-2 rounded-xl flex justify-center items-center gap-2 relative font-bold text-sm transition">
+                        <span class="text-gray-300"><i class="fa-solid fa-building-columns"></i></span> <span class="text-xs">Bank Account</span>
+                        <div class="check-icon hidden absolute -top-2 -right-2 bg-[#00c6ff] text-black rounded-full w-5 h-5 flex items-center justify-center text-xs shadow-lg"><i class="fa-solid fa-check"></i></div>
                     </button>
-                    <button class="bg-[#020617] border border-gray-800 text-gray-400 py-3 px-2 rounded-xl flex justify-center items-center gap-2 font-bold text-sm italic opacity-50 cursor-not-allowed">
+                    <button onclick="selectMethod('PayPal', this)" class="pay-btn bg-[#020617] border border-gray-800 text-gray-400 py-3 px-2 rounded-xl flex justify-center items-center gap-2 font-bold text-sm italic relative transition">
                         <span class="text-blue-500">PayPal</span>
+                        <div class="check-icon hidden absolute -top-2 -right-2 bg-[#00c6ff] text-black rounded-full w-5 h-5 flex items-center justify-center text-xs shadow-lg"><i class="fa-solid fa-check"></i></div>
                     </button>
                 </div>
                 
                 <div class="space-y-5 relative z-10">
                     <div>
-                        <label class="block text-xs font-bold text-gray-300 mb-2 flex items-center gap-2"><i class="fa-solid fa-user text-[#d946ef]"></i> Your Binance Pay ID</label>
+                        <!-- 🚀 Label changes dynamically -->
+                        <label id="wallet-label" class="block text-xs font-bold text-gray-300 mb-2 flex items-center gap-2"><i class="fa-solid fa-user text-[#d946ef]"></i> Your Binance Pay ID</label>
                         <input type="text" id="withdraw-wallet" placeholder="Enter your Binance Pay ID" class="w-full bg-[#020617] border border-gray-700 rounded-xl p-3.5 text-white focus:border-[#d946ef] outline-none shadow-inner transition">
                     </div>
                     <div>
