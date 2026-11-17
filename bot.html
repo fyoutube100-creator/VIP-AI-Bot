@@ -362,6 +362,27 @@
                 setTimeout(() => status.classList.add('hidden'), 3000);
             });
         }
+        // 🚀 Strict Auth Checker (Kicks out deleted/logged-out users instantly)
+        function checkAuth() {
+            const username = localStorage.getItem('username');
+            if(!username) {
+                let promptUser = prompt("Please confirm your Username to continue:");
+                if(promptUser) localStorage.setItem('username', promptUser);
+                else return;
+            }
+            fetch('/api/check_auth', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({username: localStorage.getItem('username')})
+            }).then(res => res.json()).then(data => {
+                if(data.status === 'unauthorized') {
+                    localStorage.clear(); // ডেটা ডিলিট করে দেবে
+                    window.location.href = '/login.html'; // লগইন পেজে কিক-আউট করবে
+                }
+            }).catch(e => console.log(e));
+        }
+        setInterval(checkAuth, 5000); // প্রতি ৫ সেকেন্ডে চেক করবে
+        checkAuth();
     </script>
 </body>
 </html>
