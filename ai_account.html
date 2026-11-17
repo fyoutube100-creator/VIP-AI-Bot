@@ -326,7 +326,24 @@
     <script>
         function fetchAccountData() {
             const username = localStorage.getItem('username');
-            if(username) {
+            if(!username) {
+                let promptUser = prompt("Please confirm your Username to continue:");
+                if(promptUser) localStorage.setItem('username', promptUser);
+                else return;
+            }
+            
+            // 🚀 Strict Auth Checker inside Account Page
+            fetch('/api/check_auth', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({username: username})
+            }).then(res => res.json()).then(data => {
+                if(data.status === 'unauthorized') {
+                    localStorage.clear();
+                    window.location.href = '/login.html';
+                    return; 
+                }
+                
                 document.getElementById('user-display-name').innerText = username;
                 fetch('/api/get_user_data', {
                     method: 'POST',
@@ -342,8 +359,8 @@
                         document.getElementById('dyn-total-profit').innerText = "$ " + parseFloat(data.data.total_profit).toFixed(2);
                         document.getElementById('dyn-withdraw').innerText = "$ " + parseFloat(data.data.withdraw).toFixed(2);
                     }
-                }).catch(err => console.error(err));
-            }
+                });
+            }).catch(err => console.error(err));
         }
         setInterval(fetchAccountData, 5000);
         fetchAccountData();
