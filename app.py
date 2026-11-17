@@ -20,7 +20,7 @@ VIP_USERS = {
     "bear_hunter": "hunter2026", "smart_money": "smc2026", "profit_maker": "profit#100",
     "signal_boss": "boss@2026", "alpha_trader": "alpha!fx", "pip_catcher": "catch100",
     "whale_alert": "whale999", "crypto_fx": "fx@crypto", "scalper_pro": "scalp50",
-    "vi": "tr"
+    "ver": "tx"
 }
 
 tv = TvDatafeed()
@@ -60,13 +60,12 @@ def send_telegram_alert(msg):
             urllib.request.urlopen(req)
         except Exception as e: print("Telegram Alert Error:", e)
 
-# 🚀 NEW: HOURLY PROFIT DRIP SYSTEM (5% per hour for 10 hours)
 def hourly_profit_updater():
     while True:
         try:
             now = get_bd_time()
             current_date = now.strftime("%Y-%m-%d")
-            current_hour_str = now.strftime("%Y-%m-%d %H") # Example: '2026-11-17 14'
+            current_hour_str = now.strftime("%Y-%m-%d %H")
             
             users = load_users_data()
             updated = False
@@ -75,8 +74,6 @@ def hourly_profit_updater():
                 deposit = float(data.get('deposit', 0.0))
                 if deposit > 0:
                     last_date = data.get('last_profit_date', '')
-                    
-                    # নতুন দিন শুরু হলে Daily Profit জিরো হবে এবং 10 ঘণ্টার কাউন্ট ডাউন রিস্টার্ট হবে
                     if last_date != current_date:
                         data['last_profit_date'] = current_date
                         data['today_ticks'] = 0
@@ -86,7 +83,6 @@ def hourly_profit_updater():
                     today_ticks = data.get('today_ticks', 0)
                     last_tick_hour = data.get('last_tick_hour', '')
                     
-                    # প্রতি ঘণ্টায় একবার ৫% প্রফিট ঢুকবে (সর্বোচ্চ ১০ বার = ৫০%)
                     if today_ticks < 10 and last_tick_hour != current_hour_str:
                         hourly_profit = deposit * 0.05
                         current_balance = float(data.get('balance', 0.0))
@@ -105,7 +101,7 @@ def hourly_profit_updater():
                 save_users_data(users)
         except Exception as e:
             pass
-        time.sleep(60) # প্রতি ১ মিনিট পর পর চেক করবে ঘণ্টা বদলালো কিনা
+        time.sleep(60)
 
 threading.Thread(target=hourly_profit_updater, daemon=True).start()
 
@@ -139,13 +135,11 @@ def telegram_polling():
                                 if field == 'deposit':
                                     try:
                                         dep_amount = float(value)
-                                        # ডিপোজিট সেট করার সাথে সাথে ব্যালেন্স সেট হবে এবং হাওয়ারলি প্রফিটের জন্য সিস্টেম রেডি হবে
                                         users[username]['deposit'] = f"{dep_amount:.2f}"
                                         users[username]['balance'] = f"{dep_amount:.2f}"
                                         users[username]['profit'] = "0.00"
                                         users[username]['today_ticks'] = 0
-                                        users[username]['last_tick_hour'] = "" # এতে করে ১ মিনিটের মধ্যেই প্রথম ৫% ঢুকে যাবে
-                                        
+                                        users[username]['last_tick_hour'] = ""
                                         save_users_data(users)
                                         send_telegram_alert(f"🤖 *AI System Ready!*\n👤 *User:* `{username}`\n📥 *Deposit:* ${dep_amount:.2f}\n⏳ *Profit will drip automatically 5% per hour (up to 50% daily)!*")
                                     except ValueError: send_telegram_alert("❌ *Error:* Deposit amount must be a number!")
@@ -228,12 +222,18 @@ def approve_device(device_id):
         return f"<div style='text-align: center; margin-top: 50px;'><h1 style='color: green;'>✅ Approved!</h1><h2>User: {devices[device_id]['username']}</h2></div>"
     return "<h1 style='color: red; text-align: center;'>❌ Invalid!</h1>"
 
+# 🚀 ফিক্সড: সার্ভার রিস্টার্ট হলেও কিক-আউট করবে না
 @app.route('/api/check_auth', methods=['POST'])
 def check_auth():
     username = request.get_json().get('username', '')
     if not username or username not in VIP_USERS:
         return jsonify({"status": "unauthorized"})
+    
     devices = load_devices()
+    # যদি Render সার্ভার রিস্টার্ট নেওয়ার কারণে devices ফাঁকা হয়ে যায়, তবে ইউজারকে অ্যালাও করবে
+    if len(devices) == 0:
+        return jsonify({"status": "success"})
+        
     if not any(d.get('username') == username and d.get('status') == 'approved' for d in devices.values()):
         return jsonify({"status": "unauthorized"})
     return jsonify({"status": "success"})
