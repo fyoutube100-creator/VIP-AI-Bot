@@ -20,45 +20,56 @@ VIP_USERS = {
     "bear_hunter": "hunter2026", "smart_money": "smc2026", "profit_maker": "profit#100",
     "signal_boss": "boss@2026", "alpha_trader": "alpha!fx", "pip_catcher": "catch100",
     "whale_alert": "whale999", "free2": "free2", "free": "free",
-    "free": "free1"
+    "free1": "free1"
 }
 
-# 🚀 FIX: Lazy Load TradingView API to prevent Server Crash on startup
+# 🚀 FIREBASE CLOUD DATABASE SETUP (Permanent Storage)
+FIREBASE_URL = "https://vip-ai-bot-db-default-rtdb.firebaseio.com/"
+
+def load_firebase(node, default_data):
+    url = f"{FIREBASE_URL}{node}.json"
+    try:
+        req = urllib.request.Request(url)
+        response = urllib.request.urlopen(req, timeout=10)
+        data = json.loads(response.read().decode('utf-8'))
+        if data is not None:
+            return data
+    except: pass
+    return default_data
+
+def save_firebase(node, data):
+    url = f"{FIREBASE_URL}{node}.json"
+    try:
+        req = urllib.request.Request(url, data=json.dumps(data).encode('utf-8'), method='PUT')
+        req.add_header('Content-Type', 'application/json')
+        urllib.request.urlopen(req, timeout=10)
+    except Exception as e: print(f"Firebase Save Error ({node}):", e)
+
+# 🔄 Replacements for local JSON files with Firebase
+def load_users_data(): return load_firebase('users_data', {})
+def save_users_data(data): save_firebase('users_data', data)
+def load_devices(): return load_firebase('devices', {})
+def save_devices(data): save_firebase('devices', data)
+def load_state():
+    data = load_firebase('state', {"active_trade_forex": None, "active_trade_binary": None, "trade_history": []})
+    if "active_trade_binary" not in data: data["active_trade_binary"] = None
+    if "trade_history" not in data: data["trade_history"] = []
+    return data
+def save_state(state): save_firebase('state', state)
+# --------------------------------------------------------
+
+# 🚀 Lazy Load TradingView API
 tv_instance = None
 def get_tv():
     global tv_instance
     if tv_instance is None:
-        try:
-            tv_instance = TvDatafeed()
-        except Exception as e:
-            print("TradingView Init Error:", e)
+        try: tv_instance = TvDatafeed()
+        except Exception as e: print("TradingView Init Error:", e)
     return tv_instance
 
 market_cache = {"time": 0, "spot": None, "eu": None}
 
 def get_bd_time(): return datetime.utcnow() + timedelta(hours=6)
-
-def load_json_file(filename, default_data):
-    filepath = os.path.join(BASE_DIR, filename)
-    if os.path.exists(filepath):
-        try:
-            with open(filepath, 'r') as f: return json.load(f)
-        except: pass
-    return default_data
-
-def save_json_file(filename, data):
-    filepath = os.path.join(BASE_DIR, filename)
-    with open(filepath, 'w') as f: json.dump(data, f, indent=4)
-
-def load_users_data(): return load_json_file('users_data.json', {})
-def save_users_data(data): save_json_file('users_data.json', data)
-def load_devices(): return load_json_file('devices.json', {})
-def save_devices(data): save_json_file('devices.json', data)
-def load_state():
-    data = load_json_file('state.json', {"active_trade_forex": None, "active_trade_binary": None, "trade_history": []})
-    if "active_trade_binary" not in data: data["active_trade_binary"] = None
-    return data
-def save_state(state): save_json_file('state.json', state)
 
 def send_telegram_alert(msg):
     botToken = os.environ.get('TELEGRAM_BOT_TOKEN')
@@ -107,8 +118,7 @@ def hourly_profit_updater():
                         data['last_tick_hour'] = current_hour_str
                         updated = True
                         
-            if updated:
-                save_users_data(users)
+            if updated: save_users_data(users)
         except Exception as e: pass
         time.sleep(60)
 
@@ -166,8 +176,7 @@ def telegram_polling():
                         
                         if active_users:
                             msg = "🟢 *Active Logged-in Users:*\n\n"
-                            for i, u in enumerate(active_users, 1):
-                                msg += f"{i}. 👤 `{u}`  ➔  🔑 `{VIP_USERS.get(u, 'Removed from code')}`\n"
+                            for i, u in enumerate(active_users, 1): msg += f"{i}. 👤 `{u}`  ➔  🔑 `{VIP_USERS.get(u, 'Removed from code')}`\n"
                             send_telegram_alert(msg)
                         else: send_telegram_alert("🔴 *No active users found.*")
 
@@ -179,8 +188,7 @@ def telegram_polling():
                             updated = False
                             for d_id in list(devices.keys()):
                                 if devices[d_id].get('username') == target:
-                                    del devices[d_id]
-                                    updated = True
+                                    del devices[d_id]; updated = True
                             if updated:
                                 save_devices(devices)
                                 send_telegram_alert(f"✅ *Success!*\nUser `{target}` has been forcibly logged out.")
@@ -234,15 +242,9 @@ def approve_device(device_id):
 @app.route('/api/check_auth', methods=['POST'])
 def check_auth():
     username = request.get_json().get('username', '')
-    if not username or username not in VIP_USERS:
-        return jsonify({"status": "unauthorized"})
-    
+    if not username or username not in VIP_USERS: return jsonify({"status": "unauthorized"})
     devices = load_devices()
-    if len(devices) == 0:
-        return jsonify({"status": "success"})
-        
-    if not any(d.get('username') == username and d.get('status') == 'approved' for d in devices.values()):
-        return jsonify({"status": "unauthorized"})
+    if not any(d.get('username') == username and d.get('status') == 'approved' for d in devices.values()): return jsonify({"status": "unauthorized"})
     return jsonify({"status": "success"})
 
 @app.route('/api/sync_price', methods=['POST'])
