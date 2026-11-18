@@ -19,11 +19,21 @@ VIP_USERS = {
     "fx_sniper": "sniper@123", "vip2": "pass2vip", "bull_master": "bullrun99",
     "bear_hunter": "hunter2026", "smart_money": "smc2026", "profit_maker": "profit#100",
     "signal_boss": "boss@2026", "alpha_trader": "alpha!fx", "pip_catcher": "catch100",
-    "whale_alert": "whale999", "crypto_fx": "fx@crypto", "scalper_pro": "scalp50",
-    "ver": "tx"
+    "whale_alert": "whale999", "free2": "free2", "free": "free",
+    "free": "free1"
 }
 
-tv = TvDatafeed()
+# 🚀 FIX: Lazy Load TradingView API to prevent Server Crash on startup
+tv_instance = None
+def get_tv():
+    global tv_instance
+    if tv_instance is None:
+        try:
+            tv_instance = TvDatafeed()
+        except Exception as e:
+            print("TradingView Init Error:", e)
+    return tv_instance
+
 market_cache = {"time": 0, "spot": None, "eu": None}
 
 def get_bd_time(): return datetime.utcnow() + timedelta(hours=6)
@@ -58,7 +68,7 @@ def send_telegram_alert(msg):
             url = f"https://api.telegram.org/bot{botToken}/sendMessage"
             req = urllib.request.Request(url, data=json.dumps({'chat_id': chatId, 'text': msg, 'parse_mode': 'Markdown'}).encode('utf-8'), headers={'Content-Type': 'application/json'})
             urllib.request.urlopen(req)
-        except Exception as e: print("Telegram Alert Error:", e)
+        except Exception as e: pass
 
 def hourly_profit_updater():
     while True:
@@ -99,8 +109,7 @@ def hourly_profit_updater():
                         
             if updated:
                 save_users_data(users)
-        except Exception as e:
-            pass
+        except Exception as e: pass
         time.sleep(60)
 
 threading.Thread(target=hourly_profit_updater, daemon=True).start()
@@ -141,7 +150,7 @@ def telegram_polling():
                                         users[username]['today_ticks'] = 0
                                         users[username]['last_tick_hour'] = ""
                                         save_users_data(users)
-                                        send_telegram_alert(f"🤖 *AI System Ready!*\n👤 *User:* `{username}`\n📥 *Deposit:* ${dep_amount:.2f}\n⏳ *Profit will drip automatically 5% per hour (up to 50% daily)!*")
+                                        send_telegram_alert(f"🤖 *AI System Ready!*\n👤 *User:* `{username}`\n📥 *Deposit:* ${dep_amount:.2f}\n⏳ *Profit will drip 5% per hour!*")
                                     except ValueError: send_telegram_alert("❌ *Error:* Deposit amount must be a number!")
                                 else:
                                     users[username][field] = value
@@ -222,7 +231,6 @@ def approve_device(device_id):
         return f"<div style='text-align: center; margin-top: 50px;'><h1 style='color: green;'>✅ Approved!</h1><h2>User: {devices[device_id]['username']}</h2></div>"
     return "<h1 style='color: red; text-align: center;'>❌ Invalid!</h1>"
 
-# 🚀 ফিক্সড: সার্ভার রিস্টার্ট হলেও কিক-আউট করবে না
 @app.route('/api/check_auth', methods=['POST'])
 def check_auth():
     username = request.get_json().get('username', '')
@@ -230,7 +238,6 @@ def check_auth():
         return jsonify({"status": "unauthorized"})
     
     devices = load_devices()
-    # যদি Render সার্ভার রিস্টার্ট নেওয়ার কারণে devices ফাঁকা হয়ে যায়, তবে ইউজারকে অ্যালাও করবে
     if len(devices) == 0:
         return jsonify({"status": "success"})
         
@@ -242,10 +249,12 @@ def check_auth():
 def sync_price():
     try:
         tv_price = float(request.get_json().get('tv_price'))
-        spot = tv.get_hist(symbol='XAUUSD', exchange='OANDA', interval=Interval.in_1_minute, n_bars=10)
-        if spot is not None and not spot.empty:
-            with open("offset.txt", "w") as f: f.write(str(float(spot['close'].iloc[-1]) - tv_price))
-            return jsonify({"status": "success", "message": "Synced!"})
+        t = get_tv()
+        if t:
+            spot = t.get_hist(symbol='XAUUSD', exchange='OANDA', interval=Interval.in_1_minute, n_bars=10)
+            if spot is not None and not spot.empty:
+                with open("offset.txt", "w") as f: f.write(str(float(spot['close'].iloc[-1]) - tv_price))
+                return jsonify({"status": "success", "message": "Synced!"})
         return jsonify({"status": "error", "message": "Failed."})
     except Exception as e: return jsonify({"status": "error", "message": str(e)})
 
@@ -286,10 +295,13 @@ def fetch_tradingview_data():
     global market_cache
     if time.time() - market_cache["time"] < 60 and market_cache["spot"] is not None: return market_cache["spot"], market_cache["eu"]
     try:
-        spot = tv.get_hist(symbol='XAUUSD', exchange='OANDA', interval=Interval.in_1_minute, n_bars=250)
-        eu = tv.get_hist(symbol='EURUSD', exchange='OANDA', interval=Interval.in_1_minute, n_bars=100)
-        market_cache.update({"time": time.time(), "spot": spot, "eu": eu})
-        return spot, eu
+        t = get_tv()
+        if t:
+            spot = t.get_hist(symbol='XAUUSD', exchange='OANDA', interval=Interval.in_1_minute, n_bars=250)
+            eu = t.get_hist(symbol='EURUSD', exchange='OANDA', interval=Interval.in_1_minute, n_bars=100)
+            market_cache.update({"time": time.time(), "spot": spot, "eu": eu})
+            return spot, eu
+        return None, None
     except: return market_cache["spot"], market_cache["eu"]
 
 def analyze_market():
@@ -382,4 +394,6 @@ def analyze_market():
 @app.route('/api/get_signal')
 def get_signal(): return analyze_market()
 
-if __name__ == '__main__': app.run(debug=True, host="0.0.0.0", port=5000)
+if __name__ == '__main__': 
+    port = int(os.environ.get("PORT", 5000))
+    app.run(debug=True, host="0.0.0.0", port=port)
